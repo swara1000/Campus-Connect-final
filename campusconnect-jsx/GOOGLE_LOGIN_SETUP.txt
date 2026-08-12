@@ -1,0 +1,18 @@
+GOOGLE LOGIN SETUP
+==================
+
+1. Open Google Cloud Console.
+2. Create/select a project.
+3. Configure OAuth consent screen.
+4. Create Credentials > OAuth client ID > Web application.
+5. Under Authorized JavaScript origins add your frontend URL, for example:
+   http://localhost:5173
+6. Copy the Client ID.
+7. In the project root create a file named .env
+8. Add:
+   VITE_GOOGLE_CLIENT_ID=YOUR_CLIENT_ID.apps.googleusercontent.com
+9. Restart the dev server:
+   npm run dev
+
+IMPORTANT:
+Google controls the account chooser. The Continue with Google button can show Google accounts signed into the browser/device, but a website cannot read or list every account stored on a laptop by itself.

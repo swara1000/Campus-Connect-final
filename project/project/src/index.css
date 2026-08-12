@@ -1,0 +1,30 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  /* Constant app-wide font and background — every page (login, layout,
+     module pages) inherits this instead of setting its own. */
+  @apply font-sans bg-app-bg text-slate-800;
+}
+
+/* Mobile sidebar drawer entrance (AdminLayout) */
+@keyframes drawer-slide-in {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+.animate-drawer-in {
+  animation: drawer-slide-in 0.2s ease-out;
+}

@@ -1,0 +1,18 @@
+# Node dependencies
+node_modules/
+**/node_modules/
+
+# Environment files - contains secrets
+.env
+**/.env
+
+# Build folders
+dist/
+**/dist/
+
+# Vite
+.vite/
+
+# Windows / OS
+Thumbs.db
+.DS_Store

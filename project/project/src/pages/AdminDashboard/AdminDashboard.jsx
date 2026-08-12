@@ -1,0 +1,203 @@
+import { useMemo } from "react";
+import {
+  CalendarDays,
+  Users,
+  Briefcase,
+  BookOpen,
+  UserRoundCheck,
+  Bell,
+  Plus,
+} from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { StatCard } from "../../components/Shared";
+import { cardShadowCls, primaryBtnShadowCls } from "../../utils";
+import {
+  seedEvents,
+  seedClubs,
+  seedDrives,
+  seedLearningRequests,
+  seedNotifications,
+} from "../../data/mockData";
+
+const quickActions = [
+  {
+    label: "Manage Events",
+    description: "Add, edit or remove campus events",
+    icon: CalendarDays,
+    tint: "text-blue-600",
+    path: "/admin/events",
+  },
+  {
+    label: "Manage Clubs",
+    description: "Add, edit or remove clubs",
+    icon: Users,
+    tint: "text-violet-600",
+    path: "/admin/clubs",
+  },
+  {
+    label: "Manage Placements",
+    description: "Track drives and applicants",
+    icon: Briefcase,
+    tint: "text-emerald-600",
+    path: "/admin/placements",
+  },
+  {
+    label: "Study Materials",
+    description: "Upload and organise resources",
+    icon: BookOpen,
+    tint: "text-orange-600",
+    path: "/admin/materials",
+  },
+  {
+    label: "Learning Requests",
+    description: "Review pending student requests",
+    icon: UserRoundCheck,
+    tint: "text-pink-600",
+    path: "/admin/learning-requests",
+  },
+  {
+    label: "Notifications",
+    description: "Send and schedule announcements",
+    icon: Bell,
+    tint: "text-cyan-600",
+    path: "/admin/notifications",
+  },
+];
+
+export default function AdminDashboard() {
+  const navigate = useNavigate();
+
+  const stats = useMemo(() => {
+    const upcomingEvents = seedEvents.filter((e) => e.status === "Upcoming").length;
+    const pendingRequests = seedLearningRequests.filter((r) => r.status === "Pending").length;
+
+    return [
+      { label: "Total Events", value: seedEvents.length, icon: CalendarDays, tint: "bg-blue-50 text-blue-600" },
+      { label: "Total Clubs", value: seedClubs.length, icon: Users, tint: "bg-violet-50 text-violet-600" },
+      { label: "Upcoming Events", value: upcomingEvents, icon: CalendarDays, tint: "bg-emerald-50 text-emerald-600" },
+      { label: "Pending Requests", value: pendingRequests, icon: UserRoundCheck, tint: "bg-orange-50 text-orange-600" },
+    ];
+  }, []);
+
+  const recentActivities = useMemo(
+    () => [
+      {
+        id: 1,
+        title: "New event created",
+        description: `${seedEvents[seedEvents.length - 2]?.name ?? "A new event"} was added.`,
+        time: "10 minutes ago",
+      },
+      {
+        id: 2,
+        title: "Club updated",
+        description: `${seedClubs[0]?.name ?? "A club"} details were updated.`,
+        time: "1 hour ago",
+      },
+      {
+        id: 3,
+        title: "Notification sent",
+        description: `${seedNotifications[0]?.title ?? "A notification"} went out to students.`,
+        time: "Yesterday",
+      },
+      {
+        id: 4,
+        title: "New placement drive",
+        description: `${seedDrives[0]?.company ?? "A company"} opened a new drive.`,
+        time: "2 days ago",
+      },
+    ],
+    []
+  );
+
+  return (
+    <div>
+      <div className="mb-8 flex flex-col justify-between gap-4 md:flex-row md:items-center">
+        <div>
+          <h2 className="text-3xl font-bold text-slate-900">Welcome back, Administrator 👋</h2>
+          <p className="mt-2 text-slate-500">Here is an overview of your CampusConnect platform.</p>
+        </div>
+
+        <div className="flex flex-col gap-3 sm:flex-row">
+          <button
+            type="button"
+            onClick={() => navigate("/admin/events")}
+            className={`flex items-center justify-center gap-2 rounded-full bg-blue-600 px-5 py-3 font-medium text-white transition hover:bg-blue-700 ${primaryBtnShadowCls}`}
+          >
+            <Plus size={19} />
+            Add Event
+          </button>
+
+          <button
+            type="button"
+            onClick={() => navigate("/admin/clubs")}
+            className="flex items-center justify-center gap-2 rounded-full border border-slate-300 bg-white px-5 py-3 font-medium text-slate-700 transition hover:bg-slate-50"
+          >
+            <Plus size={19} />
+            Add Club
+          </button>
+        </div>
+      </div>
+
+      {/* Dashboard cards — reuses the same StatCard used across every other module page */}
+      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-4">
+        {stats.map((card) => (
+          <StatCard key={card.label} icon={card.icon} label={card.label} value={card.value} tint={card.tint} />
+        ))}
+      </div>
+
+      <div className="mt-8 grid grid-cols-1 gap-6 xl:grid-cols-3">
+        {/* Recent activities */}
+        <section className={`rounded-2xl border border-slate-100 bg-white p-6 xl:col-span-2 ${cardShadowCls}`}>
+          <div className="mb-6 flex items-center justify-between">
+            <div>
+              <h3 className="text-xl font-bold text-slate-900">Recent Activities</h3>
+              <p className="mt-1 text-sm text-slate-500">Latest updates in the admin panel.</p>
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            {recentActivities.map((activity) => (
+              <div key={activity.id} className="flex items-start gap-4 rounded-2xl bg-slate-50 p-4">
+                <div className="mt-1 h-3 w-3 shrink-0 rounded-full bg-blue-600" />
+
+                <div className="flex-1">
+                  <h4 className="font-semibold text-slate-800">{activity.title}</h4>
+                  <p className="mt-1 text-sm text-slate-500">{activity.description}</p>
+                </div>
+
+                <p className="hidden text-xs text-slate-400 sm:block">{activity.time}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* Quick actions */}
+        <section className={`rounded-2xl border border-slate-100 bg-white p-6 ${cardShadowCls}`}>
+          <h3 className="text-xl font-bold text-slate-900">Quick Actions</h3>
+          <p className="mt-1 text-sm text-slate-500">Quickly manage campus modules.</p>
+
+          <div className="mt-6 space-y-3">
+            {quickActions.map((action) => {
+              const Icon = action.icon;
+              return (
+                <button
+                  key={action.path}
+                  type="button"
+                  onClick={() => navigate(action.path)}
+                  className="flex w-full items-center gap-3 rounded-2xl border border-slate-200 p-4 text-left transition hover:border-blue-300 hover:bg-blue-50"
+                >
+                  <Icon size={22} className={action.tint} />
+
+                  <div>
+                    <p className="font-semibold text-slate-800">{action.label}</p>
+                    <p className="text-sm text-slate-500">{action.description}</p>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </section>
+      </div>
+    </div>
+  );
+}
