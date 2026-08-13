@@ -7,6 +7,7 @@ import eventRoutes from "./routes/eventRoutes.js";
 import clubRoutes from "./routes/clubRoutes.js";
 import peerLearningRoutes from "./routes/peerLearningRoutes.js";
 import chatRoutes from "./routes/chatRoutes.js";
+import aiRoutes from "./routes/aiRoutes.js";
 
 const app = express();
 
@@ -35,6 +36,7 @@ app.use("/api/events", eventRoutes);
 app.use("/api/clubs", clubRoutes);
 app.use("/api/peer-learning", peerLearningRoutes);
 app.use("/api/chat", chatRoutes);
+app.use("/api/ai", aiRoutes);
 
 // TEST ROUTES
 app.get("/", (req, res) => {

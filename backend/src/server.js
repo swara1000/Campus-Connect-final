@@ -1,5 +1,9 @@
-import dotenv from "dotenv";
-dotenv.config();
+import "dotenv/config";
+
+console.log(
+  "Gemini key loaded:",
+  Boolean(process.env.GEMINI_API_KEY)
+);
 
 import http from "http";
 import { Server } from "socket.io";
