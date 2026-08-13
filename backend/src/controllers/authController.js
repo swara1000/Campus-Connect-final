@@ -10,7 +10,10 @@ const generateToken = (userId) => {
   );
 };
 
+// =====================================================
 // STUDENT REGISTER
+// =====================================================
+
 export const studentRegister = async (req, res) => {
   try {
     const {
@@ -40,7 +43,10 @@ export const studentRegister = async (req, res) => {
       });
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const hashedPassword = await bcrypt.hash(
+      password,
+      10
+    );
 
     const user = await User.create({
       name,
@@ -69,7 +75,10 @@ export const studentRegister = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error("Student register error:", error);
+    console.error(
+      "Student register error:",
+      error
+    );
 
     return res.status(500).json({
       success: false,
@@ -78,7 +87,10 @@ export const studentRegister = async (req, res) => {
   }
 };
 
+// =====================================================
 // STUDENT LOGIN
+// =====================================================
+
 export const studentLogin = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -92,7 +104,7 @@ export const studentLogin = async (req, res) => {
 
     const user = await User.findOne({
       email: email.toLowerCase(),
-    });
+    }).select("+password");
 
     if (!user || user.role !== "student") {
       return res.status(401).json({
@@ -137,7 +149,10 @@ export const studentLogin = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error("Student login error:", error);
+    console.error(
+      "Student login error:",
+      error
+    );
 
     return res.status(500).json({
       success: false,
@@ -146,7 +161,10 @@ export const studentLogin = async (req, res) => {
   }
 };
 
+// =====================================================
 // ADMIN LOGIN
+// =====================================================
+
 export const adminLogin = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -160,7 +178,7 @@ export const adminLogin = async (req, res) => {
 
     const user = await User.findOne({
       email: email.toLowerCase(),
-    });
+    }).select("+password");
 
     if (!user || user.role !== "admin") {
       return res.status(401).json({
@@ -195,7 +213,10 @@ export const adminLogin = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error("Admin login error:", error);
+    console.error(
+      "Admin login error:",
+      error
+    );
 
     return res.status(500).json({
       success: false,

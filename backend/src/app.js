@@ -4,6 +4,9 @@ import cors from "cors";
 // ROUTES
 import authRoutes from "./routes/authRoutes.js";
 import eventRoutes from "./routes/eventRoutes.js";
+import clubRoutes from "./routes/clubRoutes.js";
+import peerLearningRoutes from "./routes/peerLearningRoutes.js";
+import chatRoutes from "./routes/chatRoutes.js";
 
 const app = express();
 
@@ -15,6 +18,7 @@ app.use(
       "http://localhost:5174",
       "http://localhost:5175",
       "http://localhost:5176",
+      "http://localhost:8080",
       "http://localhost:8081",
     ],
     credentials: true,
@@ -28,6 +32,9 @@ app.use(express.urlencoded({ extended: true }));
 // APIs
 app.use("/api/auth", authRoutes);
 app.use("/api/events", eventRoutes);
+app.use("/api/clubs", clubRoutes);
+app.use("/api/peer-learning", peerLearningRoutes);
+app.use("/api/chat", chatRoutes);
 
 // TEST ROUTES
 app.get("/", (req, res) => {
