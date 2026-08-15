@@ -1,5 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import {
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 
 import {
   Search,
@@ -39,11 +43,21 @@ import {
 import { useCampus } from "@/lib/campus-store";
 
 import {
-  notes as seedNotes,
   subjects,
 } from "@/lib/learning-data";
 
 import { cn } from "@/lib/utils";
+
+/* =====================================================
+   BACKEND API
+===================================================== */
+
+const API_URL =
+  "http://localhost:5000/api/study-materials";
+
+/* =====================================================
+   ROUTE
+===================================================== */
 
 export const Route = createFileRoute("/materials")({
   head: () => ({
@@ -81,6 +95,10 @@ export const Route = createFileRoute("/materials")({
   component: MaterialsPage,
 });
 
+/* =====================================================
+   MATERIAL TYPES
+===================================================== */
+
 const typeIcon = {
   Notes: FileText,
   PYQ: FileQuestion,
@@ -95,6 +113,10 @@ const filters = [
   "Bookmarked",
 ];
 
+/* =====================================================
+   MATERIALS PAGE
+===================================================== */
+
 function MaterialsPage() {
   const {
     bookmarks,
@@ -103,7 +125,10 @@ function MaterialsPage() {
   } = useCampus();
 
   const [items, setItems] =
-    useState(seedNotes);
+    useState([]);
+
+  const [loading, setLoading] =
+    useState(true);
 
   const [query, setQuery] =
     useState("");
@@ -132,6 +157,151 @@ function MaterialsPage() {
     });
 
   /* =====================================================
+     FETCH MATERIALS FROM BACKEND
+  ===================================================== */
+
+  const fetchMaterials = async () => {
+    try {
+      setLoading(true);
+
+      const response = await fetch(
+        API_URL
+      );
+
+      const data =
+        await response.json();
+
+      console.log(
+        "Student Study Materials API:",
+        data
+      );
+
+      if (!response.ok) {
+        throw new Error(
+          data.message ||
+            "Unable to fetch study materials"
+        );
+      }
+
+      if (data.success) {
+        const formattedMaterials =
+          data.materials.map(
+            (material) => ({
+              id:
+                material._id ||
+                material.id,
+
+              title:
+                material.title ||
+                "Untitled Material",
+
+              subject:
+                material.subject ||
+                "Other",
+
+              semester:
+                material.semester ||
+                "",
+
+              type:
+                material.type ||
+                "Notes",
+
+              author:
+                material.uploadedBy ||
+                "Admin",
+
+              initials:
+                material.uploadedBy
+                  ? material.uploadedBy
+                      .split(/\s+/)
+                      .filter(Boolean)
+                      .slice(0, 2)
+                      .map((part) =>
+                        part[0]?.toUpperCase()
+                      )
+                      .join("")
+                  : "AD",
+
+              pages:
+                material.pages ||
+                0,
+
+              size:
+                material.size ||
+                "",
+
+              rating:
+                material.rating ||
+                0,
+
+              ratings:
+                material.ratings ||
+                0,
+
+              downloads:
+                material.downloads ||
+                0,
+
+              uploaded:
+                material.createdAt
+                  ? new Date(
+                      material.createdAt
+                    ).toLocaleDateString()
+                  : "",
+
+              status:
+                material.status ||
+                "approved",
+
+              summary:
+                material.summary ||
+                `Study material for ${material.subject}`,
+
+              comments:
+                Array.isArray(
+                  material.comments
+                )
+                  ? material.comments
+                  : [],
+
+              fileName:
+                material.fileName ||
+                "",
+
+              fileUrl:
+                material.fileUrl ||
+                "",
+            })
+          );
+
+        setItems(
+          formattedMaterials
+        );
+      }
+    } catch (error) {
+      console.error(
+        "Student materials fetch error:",
+        error
+      );
+
+      toast.error(
+        "Unable to load study materials"
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  /* =====================================================
+     LOAD MATERIALS WHEN PAGE OPENS
+  ===================================================== */
+
+  useEffect(() => {
+    fetchMaterials();
+  }, []);
+
+  /* =====================================================
      PDF DOWNLOAD
   ===================================================== */
 
@@ -140,10 +310,12 @@ function MaterialsPage() {
   ) => {
     try {
       /*
-        For now every card downloads the
-        same PDF from:
+        TEMPORARY:
+        Currently every material downloads
+        public/sample.pdf.
 
-        public/sample.pdf
+        Later we will connect this to the
+        actual file uploaded by Admin.
       */
 
       const response =
@@ -173,7 +345,7 @@ function MaterialsPage() {
         }.pdf`;
 
       /* =========================================
-         CHROME / EDGE SAVE-AS DIALOG
+         SAVE AS DIALOG
       ========================================= */
 
       if (
@@ -208,10 +380,6 @@ function MaterialsPage() {
 
         await writable.close();
 
-        /*
-          Increase download count
-        */
-
         setItems(
           (currentItems) =>
             currentItems.map(
@@ -239,7 +407,7 @@ function MaterialsPage() {
       }
 
       /* =========================================
-         FALLBACK DOWNLOAD
+         NORMAL DOWNLOAD FALLBACK
       ========================================= */
 
       const url =
@@ -253,7 +421,6 @@ function MaterialsPage() {
         );
 
       link.href = url;
-
       link.download =
         fileName;
 
@@ -294,11 +461,6 @@ function MaterialsPage() {
         `${material.title} downloaded successfully`
       );
     } catch (error) {
-      /*
-        User pressed Cancel
-        in Save As window.
-      */
-
       if (
         error?.name ===
         "AbortError"
@@ -323,14 +485,14 @@ function MaterialsPage() {
 
   const visible = useMemo(
     () =>
-      items.filter((n) => {
+      items.filter((material) => {
         const q = query
           .trim()
           .toLowerCase();
 
         if (
           q &&
-          !`${n.title} ${n.subject} ${n.author}`
+          !`${material.title} ${material.subject} ${material.author}`
             .toLowerCase()
             .includes(q)
         ) {
@@ -340,7 +502,8 @@ function MaterialsPage() {
         if (
           subject !==
             "All subjects" &&
-          n.subject !== subject
+          material.subject !==
+            subject
         ) {
           return false;
         }
@@ -350,13 +513,14 @@ function MaterialsPage() {
           "Bookmarked"
         ) {
           return bookmarks.includes(
-            n.id
+            material.id
           );
         }
 
         if (
           filter !== "All" &&
-          n.type !== filter
+          material.type !==
+            filter
         ) {
           return false;
         }
@@ -374,7 +538,8 @@ function MaterialsPage() {
   );
 
   /* =====================================================
-     UPLOAD
+     STUDENT UPLOAD
+     CURRENTLY LOCAL ONLY
   ===================================================== */
 
   const upload = () => {
@@ -437,6 +602,10 @@ function MaterialsPage() {
         "Awaiting admin approval.",
 
       comments: [],
+
+      fileName: "",
+
+      fileUrl: "",
     };
 
     setItems(
@@ -475,8 +644,10 @@ function MaterialsPage() {
                   ...note,
 
                   ratings:
-                    note.ratings +
-                    1,
+                    (
+                      note.ratings ||
+                      0
+                    ) + 1,
 
                   rating:
                     Math.min(
@@ -484,8 +655,10 @@ function MaterialsPage() {
 
                       Number(
                         (
-                          note.rating +
-                          0.1
+                          (
+                            note.rating ||
+                            0
+                          ) + 0.1
                         ).toFixed(
                           1
                         )
@@ -554,7 +727,8 @@ function MaterialsPage() {
                   ...note,
 
                   comments: [
-                    ...note.comments,
+                    ...(note.comments ||
+                      []),
 
                     newComment,
                   ],
@@ -570,7 +744,10 @@ function MaterialsPage() {
               ...currentActive,
 
               comments: [
-                ...currentActive.comments,
+                ...(
+                  currentActive.comments ||
+                  []
+                ),
 
                 newComment,
               ],
@@ -580,6 +757,10 @@ function MaterialsPage() {
 
     setComment("");
   };
+
+  /* =====================================================
+     UI
+  ===================================================== */
 
   return (
     <AppShell
@@ -622,7 +803,7 @@ function MaterialsPage() {
             </DialogHeader>
 
             <div className="space-y-3">
-              {/* Title */}
+              {/* TITLE */}
 
               <div>
                 <Label className="text-xs">
@@ -650,7 +831,7 @@ function MaterialsPage() {
                 />
               </div>
 
-              {/* Subject + Type */}
+              {/* SUBJECT + TYPE */}
 
               <div className="grid gap-3 sm:grid-cols-2">
                 <div>
@@ -687,15 +868,18 @@ function MaterialsPage() {
                   >
                     {subjects.map(
                       (
-                        subject
+                        subjectItem
                       ) => (
                         <option
                           key={
-                            subject
+                            subjectItem
+                          }
+                          value={
+                            subjectItem
                           }
                         >
                           {
-                            subject
+                            subjectItem
                           }
                         </option>
                       )
@@ -735,22 +919,22 @@ function MaterialsPage() {
                       text-sm
                     "
                   >
-                    <option>
+                    <option value="Notes">
                       Notes
                     </option>
 
-                    <option>
+                    <option value="PYQ">
                       PYQ
                     </option>
 
-                    <option>
+                    <option value="Assignment">
                       Assignment
                     </option>
                   </select>
                 </div>
               </div>
 
-              {/* Summary */}
+              {/* SUMMARY */}
 
               <div>
                 <Label className="text-xs">
@@ -780,7 +964,7 @@ function MaterialsPage() {
                 />
               </div>
 
-              {/* Upload Placeholder */}
+              {/* UPLOAD PLACEHOLDER */}
 
               <div
                 className="
@@ -813,8 +997,7 @@ function MaterialsPage() {
                   !form.title.trim()
                 }
               >
-                Publish for
-                review
+                Publish for review
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -822,6 +1005,7 @@ function MaterialsPage() {
       }
     >
       <div className="space-y-5">
+
         {/* =================================================
             SEARCH + FILTERS
         ================================================= */}
@@ -874,7 +1058,7 @@ function MaterialsPage() {
               text-sm
             "
           >
-            <option>
+            <option value="All subjects">
               All subjects
             </option>
 
@@ -884,6 +1068,9 @@ function MaterialsPage() {
               ) => (
                 <option
                   key={
+                    subjectItem
+                  }
+                  value={
                     subjectItem
                   }
                 >
@@ -928,225 +1115,257 @@ function MaterialsPage() {
         </GlassCard>
 
         {/* =================================================
+            LOADING
+        ================================================= */}
+
+        {loading && (
+          <GlassCard className="text-center text-sm text-muted-foreground">
+            Loading study materials...
+          </GlassCard>
+        )}
+
+        {/* =================================================
             MATERIAL CARDS
         ================================================= */}
 
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {visible.map(
-            (material) => {
-              const Icon =
-                typeIcon[
-                  material.type
-                ];
+        {!loading && (
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            {visible.map(
+              (material) => {
+                const Icon =
+                  typeIcon[
+                    material.type
+                  ] || FileText;
 
-              const saved =
-                bookmarks.includes(
-                  material.id
-                );
-
-              return (
-                <GlassCard
-                  key={
+                const saved =
+                  bookmarks.includes(
                     material.id
-                  }
+                  );
 
-                  className="
-                    flex
-                    h-full
-                    flex-col
-                    transition-transform
-                    hover:-translate-y-0.5
-                  "
-                >
-                  <div className="flex items-start justify-between gap-3">
-                    <span
-                      className="
-                        grid
-                        size-10
-                        shrink-0
-                        place-items-center
-                        rounded-2xl
-                        bg-gradient-brand
-                        text-primary-foreground
-                      "
-                    >
-                      <Icon className="size-5" />
-                    </span>
+                return (
+                  <GlassCard
+                    key={
+                      material.id
+                    }
 
-                    <div className="flex shrink-0 items-center gap-1">
-                      <Badge
-                        variant="secondary"
-
-                        className="rounded-lg"
+                    className="
+                      flex
+                      h-full
+                      flex-col
+                      transition-transform
+                      hover:-translate-y-0.5
+                    "
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <span
+                        className="
+                          grid
+                          size-10
+                          shrink-0
+                          place-items-center
+                          rounded-2xl
+                          bg-gradient-brand
+                          text-primary-foreground
+                        "
                       >
+                        <Icon className="size-5" />
+                      </span>
+
+                      <div className="flex shrink-0 items-center gap-1">
+                        <Badge
+                          variant="secondary"
+
+                          className="rounded-lg"
+                        >
+                          {
+                            material.type
+                          }
+                        </Badge>
+
+                        <Button
+                          variant="ghost"
+
+                          size="icon"
+
+                          className="size-8"
+
+                          onClick={() =>
+                            toggleBookmark(
+                              material.id
+                            )
+                          }
+
+                          aria-label="Bookmark"
+                        >
+                          <Bookmark
+                            className={cn(
+                              "size-4",
+
+                              saved &&
+                                "fill-primary text-primary"
+                            )}
+                          />
+                        </Button>
+                      </div>
+                    </div>
+
+                    <p className="mt-3 line-clamp-2 font-semibold">
+                      {
+                        material.title
+                      }
+                    </p>
+
+                    <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">
+                      {
+                        material.summary
+                      }
+                    </p>
+
+                    <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+                      <span>
                         {
-                          material.type
+                          material.subject
                         }
-                      </Badge>
+                      </span>
 
-                      <Button
-                        variant="ghost"
+                      {material.semester && (
+                        <span>
+                          Semester{" "}
+                          {
+                            material.semester
+                          }
+                        </span>
+                      )}
 
-                        size="icon"
+                      {material.pages >
+                        0 && (
+                        <span>
+                          {
+                            material.pages
+                          }{" "}
+                          pages
+                        </span>
+                      )}
 
-                        className="size-8"
+                      {material.size && (
+                        <span>
+                          {
+                            material.size
+                          }
+                        </span>
+                      )}
+                    </div>
 
+                    {material.fileName && (
+                      <p className="mt-2 truncate text-xs text-muted-foreground">
+                        File:{" "}
+                        {
+                          material.fileName
+                        }
+                      </p>
+                    )}
+
+                    <div className="mt-3 flex items-center gap-3 text-xs text-muted-foreground">
+                      <button
                         onClick={() =>
-                          toggleBookmark(
+                          rate(
                             material.id
                           )
                         }
 
-                        aria-label="Bookmark"
+                        className="
+                          flex
+                          items-center
+                          gap-1
+                          font-medium
+                          text-foreground
+                          hover:text-primary
+                        "
                       >
-                        <Bookmark
-                          className={cn(
-                            "size-4",
-
-                            saved &&
-                              "fill-primary text-primary"
-                          )}
+                        <Star
+                          className="
+                            size-3.5
+                            fill-[var(--warning,#f59e0b)]
+                            text-[var(--warning,#f59e0b)]
+                          "
                         />
+
+                        {material.rating ||
+                          "—"}{" "}
+
+                        (
+                        {
+                          material.ratings
+                        }
+                        )
+                      </button>
+
+                      <span className="flex items-center gap-1">
+                        <Download className="size-3.5" />
+
+                        {material.downloads ||
+                          0}
+                      </span>
+
+                      <span className="flex items-center gap-1">
+                        <MessageSquare className="size-3.5" />
+
+                        {
+                          (
+                            material.comments ||
+                            []
+                          ).length
+                        }
+                      </span>
+                    </div>
+
+                    <div className="mt-auto grid grid-cols-2 gap-2 pt-4">
+                      <Button
+                        variant="outline"
+
+                        size="sm"
+
+                        className="rounded-xl bg-card/60"
+
+                        onClick={() =>
+                          setActive(
+                            material
+                          )
+                        }
+                      >
+                        Details
+                      </Button>
+
+                      <Button
+                        size="sm"
+
+                        className="gap-1.5 rounded-xl"
+
+                        onClick={() =>
+                          handleDownloadPDF(
+                            material
+                          )
+                        }
+                      >
+                        <Download className="size-3.5" />
+
+                        PDF
                       </Button>
                     </div>
-                  </div>
+                  </GlassCard>
+                );
+              }
+            )}
 
-                  <p className="mt-3 line-clamp-2 font-semibold">
-                    {
-                      material.title
-                    }
-                  </p>
-
-                  <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">
-                    {
-                      material.summary
-                    }
-                  </p>
-
-                  <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
-                    <span>
-                      {
-                        material.subject
-                      }
-                    </span>
-
-                    <span>
-                      {
-                        material.pages
-                      }{" "}
-                      pages
-                    </span>
-
-                    <span>
-                      {
-                        material.size
-                      }
-                    </span>
-                  </div>
-
-                  <div className="mt-3 flex items-center gap-3 text-xs text-muted-foreground">
-                    <button
-                      onClick={() =>
-                        rate(
-                          material.id
-                        )
-                      }
-
-                      className="
-                        flex
-                        items-center
-                        gap-1
-                        font-medium
-                        text-foreground
-
-                        hover:text-primary
-                      "
-                    >
-                      <Star
-                        className="
-                          size-3.5
-                          fill-[var(--warning,#f59e0b)]
-                          text-[var(--warning,#f59e0b)]
-                        "
-                      />
-
-                      {material.rating ||
-                        "—"}{" "}
-
-                      (
-                      {
-                        material.ratings
-                      }
-                      )
-                    </button>
-
-                    <span className="flex items-center gap-1">
-                      <Download className="size-3.5" />
-
-                      {material.downloads ||
-                        0}
-                    </span>
-
-                    <span className="flex items-center gap-1">
-                      <MessageSquare className="size-3.5" />
-
-                      {
-                        material.comments
-                          .length
-                      }
-                    </span>
-                  </div>
-
-                  <div className="mt-4 grid grid-cols-2 gap-2">
-                    <Button
-                      variant="outline"
-
-                      size="sm"
-
-                      className="rounded-xl bg-card/60"
-
-                      onClick={() =>
-                        setActive(
-                          material
-                        )
-                      }
-                    >
-                      Details
-                    </Button>
-
-                    {/* =====================================
-                        PDF DOWNLOAD BUTTON
-                    ===================================== */}
-
-                    <Button
-                      size="sm"
-
-                      className="gap-1.5 rounded-xl"
-
-                      onClick={() =>
-                        handleDownloadPDF(
-                          material
-                        )
-                      }
-                    >
-                      <Download className="size-3.5" />
-
-                      PDF
-                    </Button>
-                  </div>
-                </GlassCard>
-              );
-            }
-          )}
-
-          {visible.length ===
-            0 && (
-            <GlassCard className="md:col-span-2 xl:col-span-3 text-sm text-muted-foreground">
-              No materials match
-              your filters.
-            </GlassCard>
-          )}
-        </div>
+            {visible.length ===
+              0 && (
+              <GlassCard className="md:col-span-2 xl:col-span-3 text-sm text-muted-foreground">
+                No materials match
+                your filters.
+              </GlassCard>
+            )}
+          </div>
+        )}
       </div>
 
       {/* =================================================
@@ -1156,10 +1375,12 @@ function MaterialsPage() {
       <Dialog
         open={!!active}
 
-        onOpenChange={(dialogOpen) =>
-          !dialogOpen &&
-          setActive(null)
-        }
+        onOpenChange={(dialogOpen) => {
+          if (!dialogOpen) {
+            setActive(null);
+            setComment("");
+          }
+        }}
       >
         <DialogContent className="rounded-3xl sm:max-w-xl">
           <DialogHeader>
@@ -1168,10 +1389,17 @@ function MaterialsPage() {
             </DialogTitle>
 
             <DialogDescription>
-              {active?.subject} ·
-              uploaded by{" "}
-              {active?.author} ·{" "}
-              {active?.uploaded}
+              {active?.subject}
+
+              {active?.semester &&
+                ` · Semester ${active.semester}`}
+
+              {" · uploaded by "}
+
+              {active?.author}
+
+              {active?.uploaded &&
+                ` · ${active.uploaded}`}
             </DialogDescription>
           </DialogHeader>
 
@@ -1179,12 +1407,27 @@ function MaterialsPage() {
             {active?.summary}
           </p>
 
+          {active?.fileName && (
+            <div className="rounded-xl border bg-muted/30 px-3 py-2 text-sm">
+              <span className="font-medium">
+                File:
+              </span>{" "}
+              {
+                active.fileName
+              }
+            </div>
+          )}
+
           <div className="max-h-56 space-y-3 overflow-y-auto">
-            {active?.comments.map(
+            {(
+              active?.comments ||
+              []
+            ).map(
               (commentItem) => (
                 <div
                   key={
-                    commentItem.id
+                    commentItem.id ||
+                    commentItem._id
                   }
 
                   className="flex gap-3"
@@ -1203,21 +1446,24 @@ function MaterialsPage() {
                     "
                   >
                     {
-                      commentItem.initials
+                      commentItem.initials ||
+                      "ST"
                     }
                   </span>
 
                   <div className="min-w-0">
                     <p className="text-xs font-semibold">
                       {
-                        commentItem.author
+                        commentItem.author ||
+                        "Student"
                       }{" "}
 
                       ·{" "}
 
                       <span className="font-normal text-muted-foreground">
                         {
-                          commentItem.time
+                          commentItem.time ||
+                          ""
                         }
                       </span>
                     </p>
@@ -1232,8 +1478,10 @@ function MaterialsPage() {
               )
             )}
 
-            {active?.comments
-              .length ===
+            {(
+              active?.comments ||
+              []
+            ).length ===
               0 && (
               <p className="text-sm text-muted-foreground">
                 No comments yet.

@@ -8,6 +8,7 @@ import clubRoutes from "./routes/clubRoutes.js";
 import peerLearningRoutes from "./routes/peerLearningRoutes.js";
 import chatRoutes from "./routes/chatRoutes.js";
 import aiRoutes from "./routes/aiRoutes.js";
+import studyMaterialRoutes from "./routes/studyMaterialRoutes.js";
 
 const app = express();
 
@@ -37,6 +38,7 @@ app.use("/api/clubs", clubRoutes);
 app.use("/api/peer-learning", peerLearningRoutes);
 app.use("/api/chat", chatRoutes);
 app.use("/api/ai", aiRoutes);
+app.use("/api/study-materials", studyMaterialRoutes);
 
 // TEST ROUTES
 app.get("/", (req, res) => {
