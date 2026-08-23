@@ -2,9 +2,14 @@ import express from "express";
 
 import {
   getEvents,
+  getEventById,
   createEvent,
   updateEvent,
   deleteEvent,
+  registerForEvent,
+  cancelEventRegistration,
+  getEventRegistrationStatus,
+  getMyRegisteredEvents,
 } from "../controllers/eventController.js";
 
 import {
@@ -19,6 +24,38 @@ const router = express.Router();
 
 // Student + Admin can see events
 router.get("/", getEvents);
+
+// STUDENT - events the current student has registered for
+// (must come before the "/:id" route below)
+router.get(
+  "/my-registrations",
+  protect,
+  getMyRegisteredEvents
+);
+
+// Student + Admin can see a single event
+router.get("/:id", getEventById);
+
+// CHECK REGISTRATION STATUS
+router.get(
+  "/:id/registration-status",
+  protect,
+  getEventRegistrationStatus
+);
+
+// REGISTER FOR EVENT
+router.post(
+  "/:id/register",
+  protect,
+  registerForEvent
+);
+
+// CANCEL REGISTRATION
+router.delete(
+  "/:id/register",
+  protect,
+  cancelEventRegistration
+);
 
 // Admin only
 router.post(

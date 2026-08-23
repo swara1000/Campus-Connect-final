@@ -49,9 +49,8 @@ const categories = [
 ];
 
 function EventsPage() {
-  const { registered } = useCampus();
-
   const [events, setEvents] = useState([]);
+  const [registeredIds, setRegisteredIds] = useState([]);
   const [q, setQ] = useState("");
   const [cat, setCat] = useState("All");
   const [loading, setLoading] = useState(true);
@@ -59,7 +58,30 @@ function EventsPage() {
 
   useEffect(() => {
     fetchEvents();
+    fetchMyRegistrations();
   }, []);
+
+  const fetchMyRegistrations = async () => {
+    try {
+      const token = localStorage.getItem("campusconnect_token");
+
+      if (!token) return;
+
+      const response = await fetch(`${API_URL}/my-registrations`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setRegisteredIds((data.events || []).map((event) => event._id));
+      }
+    } catch (error) {
+      console.error("My registrations fetch error:", error);
+    }
+  };
 
   const fetchEvents = async () => {
     try {
@@ -282,14 +304,14 @@ function EventsPage() {
                   <Button
                     className="w-full rounded-xl"
                     variant={
-                      registered.includes(
+                      registeredIds.includes(
                         event.id
                       )
                         ? "outline"
                         : "default"
                     }
                   >
-                    {registered.includes(
+                    {registeredIds.includes(
                       event.id
                     )
                       ? "View your ticket"

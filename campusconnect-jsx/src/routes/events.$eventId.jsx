@@ -4,6 +4,7 @@ import {
   notFound,
   useNavigate,
 } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
 import { QRCodeSVG } from "qrcode.react";
 import {
   CalendarDays,
@@ -18,12 +19,38 @@ import { AppShell, GlassCard } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { events } from "@/lib/campus-data";
 import { useCampus } from "@/lib/campus-store";
+import { API_BASE_URL } from "../lib/api-config.js";
+
+const EVENT_API = `${API_BASE_URL}/api/events`;
+
 export const Route = createFileRoute("/events/$eventId")({
-  loader: ({ params }) => {
-    const event = events.find((e) => e.id === params.eventId);
-    if (!event) throw notFound();
+  loader: async ({ params }) => {
+    const response = await fetch(`${EVENT_API}/${params.eventId}`);
+
+    if (response.status === 404) throw notFound();
+
+    const data = await response.json();
+
+    if (!response.ok) throw notFound();
+
+    const backendEvent = data.event;
+
+    const event = {
+      id: backendEvent._id,
+      title: backendEvent.name,
+      club: backendEvent.club || "Student Affairs",
+      date: backendEvent.date,
+      time: backendEvent.time || "TBC",
+      venue: backendEvent.venue || "To be announced",
+      category: backendEvent.category || "Campus",
+      seats: backendEvent.regCap || 100,
+      taken: backendEvent.regCount || 0,
+      summary: backendEvent.desc || "Campus event",
+      details: backendEvent.desc || "More information about this event will be added soon.",
+      status: backendEvent.status || "Upcoming",
+    };
+
     return {
       event,
     };
@@ -67,9 +94,135 @@ export const Route = createFileRoute("/events/$eventId")({
 });
 function EventDetails() {
   const { event } = Route.useLoaderData();
-  const { registered, toggleEvent, user } = useCampus();
+  const { toggleEvent, user } = useCampus();
   const navigate = useNavigate();
-  const isRegistered = registered.includes(event.id);
+
+  const [isRegistered, setIsRegistered] = useState(false);
+  const [checkingRegistration, setCheckingRegistration] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+  const [taken, setTaken] = useState(event.taken);
+
+  useEffect(() => {
+    checkRegistrationStatus();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [event.id]);
+
+  const checkRegistrationStatus = async () => {
+    try {
+      const token = localStorage.getItem("campusconnect_token");
+
+      if (!token) {
+        setCheckingRegistration(false);
+        return;
+      }
+
+      const response = await fetch(
+        `${EVENT_API}/${event.id}/registration-status`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setIsRegistered(Boolean(data.registered));
+      }
+    } catch (error) {
+      console.error("Registration status error:", error);
+    } finally {
+      setCheckingRegistration(false);
+    }
+  };
+
+  const handleRegister = async () => {
+    const token = localStorage.getItem("campusconnect_token");
+
+    if (!token) {
+      toast.error("Please login again.");
+      return;
+    }
+
+    try {
+      setSubmitting(true);
+
+      const response = await fetch(
+        `${EVENT_API}/${event.id}/register`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        toast.error(data.message || "Unable to register for this event");
+        return;
+      }
+
+      setIsRegistered(true);
+      setTaken(data.regCount ?? taken + 1);
+      toggleEvent(event.id);
+
+      toast.success("Registered", {
+        description: "Your QR pass is ready.",
+      });
+    } catch (error) {
+      console.error("Register for event error:", error);
+      toast.error("Cannot connect to backend.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleCancelRegistration = async () => {
+    const token = localStorage.getItem("campusconnect_token");
+
+    if (!token) {
+      toast.error("Please login again.");
+      return;
+    }
+
+    try {
+      setSubmitting(true);
+
+      const response = await fetch(
+        `${EVENT_API}/${event.id}/register`,
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        toast.error(data.message || "Unable to cancel registration");
+        return;
+      }
+
+      setIsRegistered(false);
+      setTaken(data.regCount ?? Math.max(0, taken - 1));
+      toggleEvent(event.id);
+
+      toast("Registration cancelled");
+    } catch (error) {
+      console.error("Cancel event registration error:", error);
+      toast.error("Cannot connect to backend.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const seatsFull = taken >= event.seats;
+
   return (
     <AppShell
       title={event.title}
@@ -150,11 +303,11 @@ function EventDetails() {
                   <Users className="size-4 shrink-0 text-primary" /> Capacity
                 </span>
                 <span className="text-muted-foreground">
-                  {event.taken} / {event.seats}
+                  {taken} / {event.seats}
                 </span>
               </div>
               <Progress
-                value={(event.taken / event.seats) * 100}
+                value={(taken / event.seats) * 100}
                 className="mt-3 h-2"
               />
             </div>
@@ -163,7 +316,11 @@ function EventDetails() {
 
         <aside className="space-y-6">
           <GlassCard>
-            {isRegistered ? (
+            {checkingRegistration ? (
+              <p className="text-sm text-muted-foreground">
+                Checking registration status...
+              </p>
+            ) : isRegistered ? (
               <>
                 <div className="flex items-center gap-2 text-sm font-semibold text-[var(--success)]">
                   <CheckCircle2 className="size-4" /> You're registered
@@ -189,32 +346,31 @@ function EventDetails() {
                 <Button
                   variant="ghost"
                   className="mt-2 w-full text-muted-foreground"
-                  onClick={() => {
-                    toggleEvent(event.id);
-                    toast("Registration cancelled");
-                  }}
+                  disabled={submitting}
+                  onClick={handleCancelRegistration}
                 >
-                  Cancel registration
+                  {submitting ? "Cancelling..." : "Cancel registration"}
                 </Button>
               </>
             ) : (
               <>
                 <h3 className="text-base font-bold">Register</h3>
                 <p className="mt-1 text-sm text-muted-foreground">
-                  {event.seats - event.taken} seats remaining. A QR pass is
-                  issued instantly.
+                  {seatsFull
+                    ? "This event is fully booked."
+                    : `${event.seats - taken} seats remaining. A QR pass is issued instantly.`}
                 </p>
                 <Button
                   size="lg"
                   className="mt-4 w-full rounded-xl"
-                  onClick={() => {
-                    toggleEvent(event.id);
-                    toast.success("Registered", {
-                      description: "Your QR pass is ready.",
-                    });
-                  }}
+                  disabled={submitting || seatsFull}
+                  onClick={handleRegister}
                 >
-                  Register for free
+                  {seatsFull
+                    ? "Event full"
+                    : submitting
+                      ? "Registering..."
+                      : "Register for free"}
                 </Button>
               </>
             )}

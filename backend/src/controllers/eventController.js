@@ -1,6 +1,8 @@
+import mongoose from "mongoose";
 import Event from "../models/Event.js";
 import User from "../models/User.js";
 import Notification from "../models/Notification.js";
+import EventRegistration from "../models/EventRegistration.js";
 
 // =====================================================
 // GET ALL EVENTS
@@ -22,6 +24,35 @@ export const getEvents = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: "Failed to fetch events",
+    });
+  }
+};
+
+// =====================================================
+// GET SINGLE EVENT
+// =====================================================
+
+export const getEventById = async (req, res) => {
+  try {
+    const event = await Event.findById(req.params.id);
+
+    if (!event) {
+      return res.status(404).json({
+        success: false,
+        message: "Event not found",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      event,
+    });
+  } catch (error) {
+    console.error("Get event error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch event",
     });
   }
 };
@@ -336,6 +367,206 @@ export const deleteEvent = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: "Failed to delete event",
+    });
+  }
+};
+
+// =====================================================
+// REGISTER FOR EVENT - STUDENT
+// =====================================================
+
+export const registerForEvent = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid event ID",
+      });
+    }
+
+    const event = await Event.findById(id);
+
+    if (!event) {
+      return res.status(404).json({
+        success: false,
+        message: "Event not found",
+      });
+    }
+
+    const existing = await EventRegistration.findOne({
+      event: event._id,
+      student: req.user._id,
+    });
+
+    if (existing && existing.status === "registered") {
+      return res.status(409).json({
+        success: false,
+        message: "Already registered for this event",
+      });
+    }
+
+    if (
+      (event.regCount || 0) >= (event.regCap || 0) &&
+      !existing
+    ) {
+      return res.status(409).json({
+        success: false,
+        message: "This event is fully booked",
+      });
+    }
+
+    if (existing) {
+      existing.status = "registered";
+      await existing.save();
+    } else {
+      await EventRegistration.create({
+        event: event._id,
+        student: req.user._id,
+        status: "registered",
+      });
+    }
+
+    event.regCount = (event.regCount || 0) + 1;
+
+    await event.save();
+
+    return res.status(201).json({
+      success: true,
+      message: "Registered successfully",
+      regCount: event.regCount,
+    });
+  } catch (error) {
+    console.error("Register for event error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to register for event",
+    });
+  }
+};
+
+// =====================================================
+// CANCEL EVENT REGISTRATION - STUDENT
+// =====================================================
+
+export const cancelEventRegistration = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid event ID",
+      });
+    }
+
+    const registration = await EventRegistration.findOne({
+      event: id,
+      student: req.user._id,
+      status: "registered",
+    });
+
+    if (!registration) {
+      return res.status(404).json({
+        success: false,
+        message: "Registration not found",
+      });
+    }
+
+    registration.status = "cancelled";
+
+    await registration.save();
+
+    const event = await Event.findById(id);
+
+    if (event) {
+      event.regCount = Math.max(0, (event.regCount || 0) - 1);
+
+      await event.save();
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Registration cancelled",
+      regCount: event?.regCount ?? 0,
+    });
+  } catch (error) {
+    console.error("Cancel event registration error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message:
+        error.message || "Failed to cancel registration",
+    });
+  }
+};
+
+// =====================================================
+// CHECK REGISTRATION STATUS - STUDENT
+// =====================================================
+
+export const getEventRegistrationStatus = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid event ID",
+      });
+    }
+
+    const registration = await EventRegistration.findOne({
+      event: id,
+      student: req.user._id,
+      status: "registered",
+    });
+
+    return res.status(200).json({
+      success: true,
+      registered: Boolean(registration),
+    });
+  } catch (error) {
+    console.error("Event registration status error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message:
+        error.message || "Failed to check registration",
+    });
+  }
+};
+
+// =====================================================
+// GET MY REGISTERED EVENTS - STUDENT
+// =====================================================
+
+export const getMyRegisteredEvents = async (req, res) => {
+  try {
+    const registrations = await EventRegistration.find({
+      student: req.user._id,
+      status: "registered",
+    })
+      .populate("event")
+      .sort({ createdAt: -1 });
+
+    const events = registrations
+      .filter((registration) => registration.event)
+      .map((registration) => registration.event);
+
+    return res.status(200).json({
+      success: true,
+      count: events.length,
+      events,
+    });
+  } catch (error) {
+    console.error("Get my registered events error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch registered events",
     });
   }
 };

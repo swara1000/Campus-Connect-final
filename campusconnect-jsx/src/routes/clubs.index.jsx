@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import {
   Search,
@@ -20,11 +20,31 @@ import { Button } from "@/components/ui/button";
 
 import { Badge } from "@/components/ui/badge";
 
-import { clubs } from "@/lib/campus-data";
-
 import { useCampus } from "@/lib/campus-store";
 
 import { cn } from "@/lib/utils";
+
+import { API_BASE_URL } from "../lib/api-config.js";
+
+const CLUB_API = `${API_BASE_URL}/api/clubs`;
+
+function getClubEmoji(category) {
+  switch (category) {
+    case "Tech":
+    case "Engineering":
+      return "💻";
+    case "Arts":
+      return "🎨";
+    case "Business":
+      return "💼";
+    case "Community":
+      return "🤝";
+    case "Academic":
+      return "📚";
+    default:
+      return "🏛️";
+  }
+}
 
 /* =====================================================
    ROUTE
@@ -88,6 +108,56 @@ function ClubsPage() {
 
   const [cat, setCat] =
     useState("All");
+
+  const [clubs, setClubs] =
+    useState([]);
+
+  const [loading, setLoading] =
+    useState(true);
+
+  const [error, setError] =
+    useState("");
+
+  /* =====================================================
+     FETCH CLUBS
+  ===================================================== */
+
+  useEffect(() => {
+    const fetchClubs = async () => {
+      try {
+        setLoading(true);
+        setError("");
+
+        const response = await fetch(CLUB_API);
+        const data = await response.json();
+
+        if (!response.ok) {
+          setError(data.message || "Failed to load clubs.");
+          return;
+        }
+
+        const formattedClubs = (data.clubs || []).map((club) => ({
+          id: club._id,
+          name: club.name,
+          category: club.category || "General",
+          members: club.membersCount || 0,
+          lead: club.president || "Not assigned",
+          blurb: club.description || "Campus student club",
+          status: club.status || "Active",
+          emoji: getClubEmoji(club.category),
+        }));
+
+        setClubs(formattedClubs);
+      } catch (err) {
+        console.error("Clubs fetch error:", err);
+        setError("Cannot connect to backend. Make sure backend is running.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchClubs();
+  }, []);
 
   /* =====================================================
      FILTER CLUBS
@@ -196,10 +266,23 @@ function ClubsPage() {
 
         </GlassCard>
 
+        {loading && (
+          <GlassCard className="text-center text-sm text-muted-foreground">
+            Loading clubs...
+          </GlassCard>
+        )}
+
+        {error && (
+          <GlassCard className="text-center text-sm text-red-500">
+            {error}
+          </GlassCard>
+        )}
+
         {/* =================================================
             CLUB CARDS
         ================================================= */}
 
+        {!loading && !error && (
         <div
           className="
             grid
@@ -417,12 +500,13 @@ function ClubsPage() {
           })}
 
         </div>
+        )}
 
         {/* =================================================
             NO RESULTS
         ================================================= */}
 
-        {list.length === 0 && (
+        {!loading && !error && list.length === 0 && (
           <GlassCard className="py-12 text-center">
 
             <Search className="mx-auto size-8 text-muted-foreground" />

@@ -1,12 +1,16 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
 import { QRCodeSVG } from "qrcode.react";
 import { CalendarDays, Clock, MapPin, Ticket } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell, GlassCard } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { events } from "@/lib/campus-data";
 import { useCampus } from "@/lib/campus-store";
+import { API_BASE_URL } from "../lib/api-config.js";
+
+const EVENT_API = `${API_BASE_URL}/api/events`;
+
 export const Route = createFileRoute("/registered")({
   head: () => ({
     meta: [
@@ -30,14 +34,109 @@ export const Route = createFileRoute("/registered")({
   component: RegisteredPage,
 });
 function RegisteredPage() {
-  const { registered, toggleEvent, user } = useCampus();
-  const mine = events.filter((e) => registered.includes(e.id));
+  const { toggleEvent, user } = useCampus();
+  const [mine, setMine] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    fetchMyEvents();
+  }, []);
+
+  const fetchMyEvents = async () => {
+    try {
+      setLoading(true);
+      setError("");
+
+      const token = localStorage.getItem("campusconnect_token");
+
+      if (!token) {
+        setError("Please login to see your tickets.");
+        return;
+      }
+
+      const response = await fetch(`${EVENT_API}/my-registrations`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setError(data.message || "Failed to load your tickets.");
+        return;
+      }
+
+      const formatted = (data.events || []).map((event) => ({
+        id: event._id,
+        title: event.name,
+        club: event.club || "Student Affairs",
+        date: event.date,
+        time: event.time || "TBC",
+        venue: event.venue || "To be announced",
+        category: event.category || "Campus",
+      }));
+
+      setMine(formatted);
+    } catch (err) {
+      console.error("My tickets fetch error:", err);
+      setError("Cannot connect to backend. Make sure backend is running.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCancel = async (eventId) => {
+    try {
+      const token = localStorage.getItem("campusconnect_token");
+
+      if (!token) {
+        toast.error("Please login again.");
+        return;
+      }
+
+      const response = await fetch(`${EVENT_API}/${eventId}/register`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        toast.error(data.message || "Unable to cancel registration");
+        return;
+      }
+
+      setMine((current) => current.filter((e) => e.id !== eventId));
+      toggleEvent(eventId);
+      toast("Ticket released");
+    } catch (err) {
+      console.error("Cancel registration error:", err);
+      toast.error("Cannot connect to backend.");
+    }
+  };
+
   return (
     <AppShell
       title="Registered Events"
       subtitle={`${mine.length} active ticket${mine.length === 1 ? "" : "s"}`}
     >
-      {mine.length === 0 ? (
+      {loading && (
+        <GlassCard className="text-center text-sm text-muted-foreground">
+          Loading your tickets...
+        </GlassCard>
+      )}
+
+      {!loading && error && (
+        <GlassCard className="text-center text-sm text-red-500">
+          {error}
+        </GlassCard>
+      )}
+
+      {!loading && !error && mine.length === 0 ? (
         <GlassCard className="py-16 text-center">
           <Ticket className="mx-auto size-10 text-muted-foreground" />
           <p className="mt-4 font-semibold">No tickets yet</p>
@@ -48,7 +147,9 @@ function RegisteredPage() {
             <Button className="mt-5 rounded-xl">Browse events</Button>
           </Link>
         </GlassCard>
-      ) : (
+      ) : null}
+
+      {!loading && !error && mine.length > 0 && (
         <div className="grid gap-4 lg:grid-cols-2">
           {mine.map((e) => (
             <GlassCard
@@ -96,10 +197,7 @@ function RegisteredPage() {
                     size="sm"
                     variant="ghost"
                     className="text-muted-foreground"
-                    onClick={() => {
-                      toggleEvent(e.id);
-                      toast("Ticket released");
-                    }}
+                    onClick={() => handleCancel(e.id)}
                   >
                     Cancel
                   </Button>
