@@ -2,6 +2,8 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Search, MapPin, Clock, CalendarDays } from "lucide-react";
 
+import { toast } from "sonner";
+
 import { AppShell, GlassCard } from "@/components/AppShell";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -55,6 +57,7 @@ function EventsPage() {
   const [cat, setCat] = useState("All");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [registeringId, setRegisteringId] = useState(null);
 
   useEffect(() => {
     fetchEvents();
@@ -141,6 +144,55 @@ function EventsPage() {
       );
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleRegister = async (event) => {
+    const token = localStorage.getItem("campusconnect_token");
+
+    if (!token) {
+      toast.error("Please login to register for events.");
+      return;
+    }
+
+    try {
+      setRegisteringId(event.id);
+
+      const response = await fetch(
+        `${API_URL}/${event.id}/register`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        toast.error(data.message || "Unable to register for this event");
+        return;
+      }
+
+      setRegisteredIds((prev) => [...prev, event.id]);
+
+      setEvents((prev) =>
+        prev.map((item) =>
+          item.id === event.id
+            ? { ...item, taken: data.regCount ?? item.taken + 1 }
+            : item
+        )
+      );
+
+      toast.success("Registered", {
+        description: "Your QR pass is ready.",
+      });
+    } catch (error) {
+      console.error("Register for event error:", error);
+      toast.error("Cannot connect to backend.");
+    } finally {
+      setRegisteringId(null);
     }
   };
 
@@ -294,30 +346,55 @@ function EventsPage() {
                   />
                 </div>
 
-                <Link
-                  to="/events/$eventId"
-                  params={{
-                    eventId: event.id,
-                  }}
-                  className="mt-5"
-                >
-                  <Button
-                    className="w-full rounded-xl"
-                    variant={
-                      registeredIds.includes(
-                        event.id
-                      )
-                        ? "outline"
-                        : "default"
-                    }
-                  >
-                    {registeredIds.includes(
-                      event.id
-                    )
-                      ? "View your ticket"
-                      : "View details"}
-                  </Button>
-                </Link>
+                <div className="mt-5 flex gap-2">
+                  {registeredIds.includes(event.id) ? (
+                    <Link
+                      to="/events/$eventId"
+                      params={{
+                        eventId: event.id,
+                      }}
+                      className="flex-1"
+                    >
+                      <Button
+                        className="w-full rounded-xl"
+                        variant="outline"
+                      >
+                        View your ticket
+                      </Button>
+                    </Link>
+                  ) : (
+                    <>
+                      <Button
+                        className="flex-1 rounded-xl"
+                        disabled={
+                          registeringId === event.id ||
+                          event.taken >= event.seats
+                        }
+                        onClick={() => handleRegister(event)}
+                      >
+                        {event.taken >= event.seats
+                          ? "Event full"
+                          : registeringId === event.id
+                            ? "Registering..."
+                            : "Register"}
+                      </Button>
+
+                      <Link
+                        to="/events/$eventId"
+                        params={{
+                          eventId: event.id,
+                        }}
+                      >
+                        <Button
+                          variant="outline"
+                          className="rounded-xl"
+                        >
+                          Details
+                        </Button>
+                      </Link>
+                    </>
+                  )}
+                </div>
               </GlassCard>
             ))}
           </div>
