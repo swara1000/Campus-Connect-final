@@ -2,6 +2,64 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --background: oklch(0.985 0.006 250);
+  --foreground: oklch(0.22 0.035 260);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.22 0.035 260);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.22 0.035 260);
+  --primary: oklch(0.53 0.19 262);
+  --primary-foreground: oklch(0.99 0.005 250);
+  --secondary: oklch(0.955 0.015 250);
+  --secondary-foreground: oklch(0.32 0.06 262);
+  --muted: oklch(0.955 0.012 250);
+  --muted-foreground: oklch(0.53 0.035 258);
+  --accent: oklch(0.93 0.04 250);
+  --accent-foreground: oklch(0.32 0.09 262);
+  --destructive: oklch(0.577 0.245 27.325);
+  --destructive-foreground: oklch(0.984 0.003 247.858);
+  --border: oklch(0.9 0.015 252);
+  --input: oklch(0.9 0.015 252);
+  --ring: oklch(0.53 0.19 262);
+  --brand: oklch(0.53 0.19 262);
+  --brand-soft: oklch(0.72 0.13 250);
+  --brand-deep: oklch(0.33 0.13 265);
+  --glass: oklch(1 0 0 / 62%);
+  --glass-border: oklch(1 0 0 / 70%);
+  --success: oklch(0.63 0.15 155);
+  --warning: oklch(0.75 0.15 75);
+}
+
+html.dark {
+  --background: oklch(0.17 0.03 264);
+  --foreground: oklch(0.96 0.008 250);
+  --card: oklch(0.225 0.035 264);
+  --card-foreground: oklch(0.96 0.008 250);
+  --popover: oklch(0.225 0.035 264);
+  --popover-foreground: oklch(0.96 0.008 250);
+  --primary: oklch(0.68 0.16 258);
+  --primary-foreground: oklch(0.16 0.03 264);
+  --secondary: oklch(0.28 0.04 262);
+  --secondary-foreground: oklch(0.96 0.008 250);
+  --muted: oklch(0.27 0.035 262);
+  --muted-foreground: oklch(0.72 0.03 256);
+  --accent: oklch(0.32 0.06 262);
+  --accent-foreground: oklch(0.93 0.02 250);
+  --destructive: oklch(0.704 0.191 22.216);
+  --destructive-foreground: oklch(0.984 0.003 247.858);
+  --border: oklch(1 0 0 / 12%);
+  --input: oklch(1 0 0 / 16%);
+  --ring: oklch(0.68 0.16 258);
+  --brand: oklch(0.68 0.16 258);
+  --brand-soft: oklch(0.78 0.11 250);
+  --brand-deep: oklch(0.45 0.16 265);
+  --glass: oklch(0.28 0.04 264 / 55%);
+  --glass-border: oklch(1 0 0 / 12%);
+  --success: oklch(0.72 0.15 155);
+  --warning: oklch(0.8 0.14 75);
+}
+
 html,
 body,
 #root {
@@ -10,9 +68,80 @@ body,
 
 body {
   margin: 0;
-  /* Constant app-wide font and background — every page (login, layout,
-     module pages) inherits this instead of setting its own. */
-  @apply font-sans bg-app-bg text-slate-800;
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+  background-image:
+    radial-gradient(60rem 40rem at 8% -10%, color-mix(in oklab, var(--brand) 22%, transparent), transparent 60%),
+    radial-gradient(50rem 36rem at 100% 0%, color-mix(in oklab, var(--brand-soft) 20%, transparent), transparent 60%);
+  background-attachment: fixed;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: "Sora", ui-sans-serif, system-ui, sans-serif;
+}
+
+@layer base {
+  * {
+    border-color: var(--border);
+  }
+
+  body {
+    color: var(--foreground);
+    background-color: var(--background);
+  }
+}
+
+@layer utilities {
+  .bg-background { background-color: var(--background); }
+  .bg-card { background-color: var(--card); }
+  .bg-primary { background-color: var(--primary); }
+  .text-foreground { color: var(--foreground); }
+  .text-muted-foreground { color: var(--muted-foreground); }
+  .text-card-foreground { color: var(--card-foreground); }
+  .border-border { border-color: var(--border); }
+  .text-primary-foreground { color: var(--primary-foreground); }
+  .bg-gradient-brand {
+    background-image: linear-gradient(120deg, var(--brand-deep), var(--brand) 55%, var(--brand-soft));
+  }
+  .glass {
+    background-color: var(--glass);
+    backdrop-filter: blur(18px) saturate(150%);
+    border: 1px solid var(--glass-border);
+    box-shadow: 0 12px 40px -18px color-mix(in oklab, var(--brand-deep) 45%, transparent);
+  }
+
+  .bg-slate-50 { background-color: var(--muted); }
+  .bg-slate-100 { background-color: color-mix(in oklab, var(--card) 80%, var(--background)); }
+  .bg-white { background-color: var(--card); }
+  .text-slate-900,
+  .text-slate-800,
+  .text-slate-700,
+  .text-slate-600,
+  .text-slate-500,
+  .text-slate-400,
+  .text-slate-300 { color: var(--foreground); }
+  .text-slate-500,
+  .text-slate-400,
+  .text-slate-300 { color: var(--muted-foreground); }
+  .border-slate-200,
+  .border-slate-100,
+  .border-slate-300 { border-color: var(--border); }
+  .hover\:bg-slate-50:hover { background-color: var(--muted); }
+  .hover\:bg-slate-100:hover { background-color: color-mix(in oklab, var(--card) 80%, var(--background)); }
+  .hover\:bg-blue-50:hover { background-color: color-mix(in oklab, var(--primary) 12%, transparent); }
+  .hover\:text-blue-600:hover { color: var(--brand); }
+  .hover\:text-slate-700:hover { color: var(--foreground); }
+  .text-blue-600,
+  .text-blue-700 { color: var(--brand); }
+  .bg-blue-50 { background-color: color-mix(in oklab, var(--primary) 12%, transparent); }
+  .hover\:bg-blue-100:hover { background-color: color-mix(in oklab, var(--primary) 18%, transparent); }
+  .bg-emerald-50 { background-color: color-mix(in oklab, var(--success) 12%, transparent); }
+  .text-emerald-600 { color: var(--success); }
+  .bg-orange-50 { background-color: color-mix(in oklab, var(--warning) 14%, transparent); }
+  .text-orange-600 { color: var(--warning); }
+  .bg-red-50 { background-color: color-mix(in oklab, var(--destructive) 12%, transparent); }
+  .text-red-600 { color: var(--destructive); }
 }
 
 /* Mobile sidebar drawer entrance (AdminLayout) */

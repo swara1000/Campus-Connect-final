@@ -19,6 +19,7 @@ const userSchema = new mongoose.Schema(
     password: {
       type: String,
       required: true,
+      select: false,
     },
 
     role: {
@@ -30,27 +31,45 @@ const userSchema = new mongoose.Schema(
     studentId: {
       type: String,
       default: "",
+      trim: true,
     },
 
     department: {
       type: String,
       default: "",
+      trim: true,
     },
 
     year: {
       type: String,
       default: "",
+      trim: true,
     },
 
     bio: {
       type: String,
       default: "",
+      trim: true,
     },
 
     status: {
       type: String,
       enum: ["active", "blocked"],
       default: "active",
+    },
+
+    // =====================================================
+    // PASSWORD RESET OTP
+    // =====================================================
+
+    resetOtpHash: {
+      type: String,
+      default: null,
+    },
+
+    resetOtpExpiresAt: {
+      type: Date,
+      default: null,
     },
   },
   {

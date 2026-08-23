@@ -1,4 +1,5 @@
 import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
+
 import {
   LayoutDashboard,
   CalendarDays,
@@ -16,7 +17,6 @@ import {
   Menu,
   BookOpen,
   Bot,
-  HelpCircle,
   UsersRound,
   Briefcase,
   Building2,
@@ -26,13 +26,17 @@ import {
 } from "lucide-react";
 
 import { useState } from "react";
+
 import { useCampus } from "@/lib/campus-store";
+
 import { Button } from "@/components/ui/button";
+
 import {
   Sheet,
   SheetContent,
   SheetTrigger,
 } from "@/components/ui/sheet";
+
 import { cn } from "@/lib/utils";
 
 /* =====================================================
@@ -64,11 +68,6 @@ const studentNav = [
     to: "/chat",
     label: "Chat",
     icon: MessagesSquare,
-  },
-  {
-    to: "/forum",
-    label: "Discussion Forum",
-    icon: HelpCircle,
   },
   {
     to: "/teams",
@@ -121,11 +120,6 @@ const adminNav = [
     to: "/peer-learning",
     label: "Learning Requests",
     icon: ClipboardList,
-  },
-  {
-    to: "/forum",
-    label: "Discussion Forum",
-    icon: HelpCircle,
   },
   {
     to: "/admin/events",
@@ -209,7 +203,11 @@ function NavList({ onNavigate }) {
 
   return (
     <nav className="space-y-6">
-      {/* Student */}
+
+      {/* =================================================
+          STUDENT NAVIGATION
+      ================================================= */}
+
       <div>
         <p className="mb-3 px-4 text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground/70">
           Campus
@@ -226,7 +224,10 @@ function NavList({ onNavigate }) {
         </div>
       </div>
 
-      {/* Admin */}
+      {/* =================================================
+          ADMIN NAVIGATION
+      ================================================= */}
+
       {user?.role === "admin" && (
         <div>
           <p className="mb-3 px-4 text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground/70">
@@ -245,7 +246,10 @@ function NavList({ onNavigate }) {
         </div>
       )}
 
-      {/* System */}
+      {/* =================================================
+          SYSTEM
+      ================================================= */}
+
       <div>
         <p className="mb-3 px-4 text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground/70">
           System
@@ -259,6 +263,7 @@ function NavList({ onNavigate }) {
           )}
         </div>
       </div>
+
     </nav>
   );
 }
@@ -311,7 +316,9 @@ function SidebarProfile({
   user,
   onSignOut,
 }) {
-  if (!user) return null;
+  if (!user) {
+    return null;
+  }
 
   const initials =
     user.initials ||
@@ -394,6 +401,7 @@ function SidebarProfile({
         onClick={onSignOut}
       >
         <LogOut className="size-4" />
+
         Sign out
       </Button>
     </div>
@@ -417,9 +425,8 @@ export function AppShell({
     signOut,
   } = useCampus();
 
-  const navigate = useNavigate();
-
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] =
+    useState(false);
 
   const handleSignOut = () => {
     signOut();
@@ -429,8 +436,11 @@ export function AppShell({
     });
   };
 
+  const navigate = useNavigate();
+
   return (
     <div className="min-h-screen bg-background">
+
       {/* =================================================
           FIXED DESKTOP SIDEBAR
       ================================================= */}
@@ -465,12 +475,15 @@ export function AppShell({
           lg:flex
         "
       >
-        {/* Brand stays at top */}
+
+        {/* Brand */}
+
         <div className="shrink-0 pb-5">
           <Brand />
         </div>
 
-        {/* ONLY NAVIGATION SCROLLS */}
+        {/* Navigation */}
+
         <div
           className="
             min-h-0
@@ -478,18 +491,19 @@ export function AppShell({
             overflow-y-auto
             overflow-x-hidden
             pr-1
-
             [scrollbar-width:thin]
           "
         >
           <NavList />
         </div>
 
-        {/* User profile stays at bottom */}
+        {/* Profile */}
+
         <SidebarProfile
           user={user}
           onSignOut={handleSignOut}
         />
+
       </aside>
 
       {/* =================================================
@@ -504,10 +518,12 @@ export function AppShell({
           lg:ml-[303px]
         "
       >
+
         <main className="min-w-0">
-          {/* =============================================
-              FIXED/STICKY TOP HEADER
-          ============================================= */}
+
+          {/* =================================================
+              HEADER
+          ================================================= */}
 
           <header
             className="
@@ -541,8 +557,11 @@ export function AppShell({
               sm:px-5
             "
           >
+
             <div className="flex min-w-0 items-center gap-3">
+
               {/* MOBILE SIDEBAR */}
+
               <Sheet
                 open={open}
                 onOpenChange={setOpen}
@@ -568,6 +587,7 @@ export function AppShell({
                     sm:w-[320px]
                   "
                 >
+
                   <div className="shrink-0 pb-5">
                     <Brand />
                   </div>
@@ -584,10 +604,12 @@ export function AppShell({
                     user={user}
                     onSignOut={handleSignOut}
                   />
+
                 </SheetContent>
               </Sheet>
 
               {/* TITLE */}
+
               <div className="min-w-0">
                 <h1
                   className="
@@ -619,10 +641,13 @@ export function AppShell({
                   </p>
                 )}
               </div>
+
             </div>
 
             {/* HEADER ACTIONS */}
+
             <div className="ml-auto flex shrink-0 items-center gap-1 sm:gap-2">
+
               {action}
 
               <Button
@@ -654,18 +679,23 @@ export function AppShell({
                   <span className="absolute right-2 top-2 size-1.5 rounded-full bg-primary" />
                 </Button>
               </Link>
+
             </div>
+
           </header>
 
-          {/* =============================================
+          {/* =================================================
               PAGE CONTENT
-          ============================================= */}
+          ================================================= */}
 
           <div className="min-w-0 pb-6">
             {children}
           </div>
+
         </main>
+
       </div>
+
     </div>
   );
 }
@@ -695,4 +725,4 @@ export function GlassCard({
       {children}
     </div>
   );
-}
+} 

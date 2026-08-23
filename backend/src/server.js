@@ -33,7 +33,9 @@ const io = new Server(httpServer, {
       "http://localhost:8080",
       "http://localhost:8081",
     ],
+
     methods: ["GET", "POST"],
+
     credentials: true,
   },
 });
@@ -48,7 +50,32 @@ io.on("connection", (socket) => {
     socket.id
   );
 
-  // Join a specific private conversation
+  /* =================================================
+     USER NOTIFICATION ROOM
+  ================================================= */
+
+  socket.on("join-user", (userId) => {
+    if (!userId) {
+      console.warn(
+        "join-user called without userId"
+      );
+
+      return;
+    }
+
+    const room = `user-${userId}`;
+
+    socket.join(room);
+
+    console.log(
+      `User ${userId} joined notification room ${room}`
+    );
+  });
+
+  /* =================================================
+     CHAT CONVERSATION
+  ================================================= */
+
   socket.on(
     "join-conversation",
     (conversationId) => {
@@ -64,7 +91,10 @@ io.on("connection", (socket) => {
     }
   );
 
-  // Leave conversation
+  /* =================================================
+     LEAVE CONVERSATION
+  ================================================= */
+
   socket.on(
     "leave-conversation",
     (conversationId) => {
@@ -73,10 +103,17 @@ io.on("connection", (socket) => {
       }
 
       socket.leave(conversationId);
+
+      console.log(
+        `Socket ${socket.id} left conversation ${conversationId}`
+      );
     }
   );
 
-  // Typing
+  /* =================================================
+     TYPING
+  ================================================= */
+
   socket.on(
     "typing",
     ({
@@ -96,7 +133,10 @@ io.on("connection", (socket) => {
     }
   );
 
-  // Stop typing
+  /* =================================================
+     STOP TYPING
+  ================================================= */
+
   socket.on(
     "stop-typing",
     ({
@@ -108,11 +148,18 @@ io.on("connection", (socket) => {
 
       socket
         .to(conversationId)
-        .emit("user-stop-typing", {
-          conversationId,
-        });
+        .emit(
+          "user-stop-typing",
+          {
+            conversationId,
+          }
+        );
     }
   );
+
+  /* =================================================
+     DISCONNECT
+  ================================================= */
 
   socket.on("disconnect", () => {
     console.log(
@@ -123,7 +170,7 @@ io.on("connection", (socket) => {
 });
 
 /* =====================================================
-   MAKE IO AVAILABLE TO CONTROLLERS
+   MAKE SOCKET.IO AVAILABLE TO CONTROLLERS
 ===================================================== */
 
 app.set("io", io);

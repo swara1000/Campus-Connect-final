@@ -1,4 +1,9 @@
-import { useMemo, useState } from "react";
+import {
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
+
 import {
   Search,
   Users,
@@ -10,133 +15,197 @@ import {
   X,
 } from "lucide-react";
 
+const API_URL = "http://localhost:5000/api";
+
 function StudentManagement() {
   const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState("All");
-  const [selectedStudent, setSelectedStudent] = useState(null);
 
-  const [students, setStudents] = useState([
-    {
-      id: 1,
-      name: "Aarav Sharma",
-      email: "aarav.sharma@gmail.com",
-      course: "Computer Engineering",
-      year: "Third Year",
-      status: "Active",
-    },
-    {
-      id: 2,
-      name: "Priya Patil",
-      email: "priya.patil@gmail.com",
-      course: "Information Technology",
-      year: "Second Year",
-      status: "Active",
-    },
-    {
-      id: 3,
-      name: "Rahul Deshmukh",
-      email: "rahul.deshmukh@gmail.com",
-      course: "Computer Science",
-      year: "Final Year",
-      status: "Inactive",
-    },
-    {
-      id: 4,
-      name: "Sneha Kulkarni",
-      email: "sneha.kulkarni@gmail.com",
-      course: "Electronics",
-      year: "Third Year",
-      status: "Active",
-    },
-    {
-      id: 5,
-      name: "Rohan Joshi",
-      email: "rohan.joshi@gmail.com",
-      course: "Mechanical Engineering",
-      year: "Second Year",
-      status: "Active",
-    },
-  ]);
+  const [statusFilter, setStatusFilter] =
+    useState("All");
 
-  const filteredStudents = useMemo(() => {
-    return students.filter((student) => {
-      const matchesSearch =
-        student.name.toLowerCase().includes(search.toLowerCase()) ||
-        student.email.toLowerCase().includes(search.toLowerCase()) ||
-        student.course.toLowerCase().includes(search.toLowerCase());
+  const [selectedStudent, setSelectedStudent] =
+    useState(null);
 
-      const matchesStatus =
-        statusFilter === "All" ||
-        student.status === statusFilter;
+  const [students, setStudents] =
+    useState([]);
 
-      return matchesSearch && matchesStatus;
-    });
-  }, [students, search, statusFilter]);
+  const [loading, setLoading] =
+    useState(true);
 
-  const totalStudents = students.length;
+  const [error, setError] =
+    useState("");
 
-  const activeStudents = students.filter(
-    (student) => student.status === "Active"
-  ).length;
+  // =====================================================
+  // FETCH STUDENTS FROM BACKEND
+  // =====================================================
 
-  const inactiveStudents = students.filter(
-    (student) => student.status === "Inactive"
-  ).length;
+  const fetchStudents = async () => {
+    try {
+      setLoading(true);
+      setError("");
 
-  const handleDelete = (id) => {
-    const confirmDelete = window.confirm(
-      "Are you sure you want to delete this student?"
-    );
+      const response = await fetch(
+        `${API_URL}/students`
+      );
 
-    if (!confirmDelete) return;
+      const data = await response.json();
 
-    setStudents((currentStudents) =>
-      currentStudents.filter((student) => student.id !== id)
-    );
+      if (!response.ok) {
+        throw new Error(
+          data.message ||
+            "Failed to fetch students"
+        );
+      }
 
-    setSelectedStudent(null);
+      setStudents(
+        data.students || []
+      );
+    } catch (error) {
+      console.error(
+        "Fetch students error:",
+        error
+      );
+
+      setError(
+        error.message ||
+          "Failed to load students"
+      );
+    } finally {
+      setLoading(false);
+    }
   };
 
-  return (
-    <div className="min-h-full bg-slate-50 p-6 md:p-8">
+  // =====================================================
+  // LOAD STUDENTS WHEN PAGE OPENS
+  // =====================================================
 
-      {/* ================= HEADER ================= */}
+  useEffect(() => {
+    fetchStudents();
+  }, []);
+
+  // =====================================================
+  // FILTER STUDENTS
+  // =====================================================
+
+  const filteredStudents = useMemo(() => {
+    return students.filter(
+      (student) => {
+        const searchText =
+          search.toLowerCase();
+
+        const matchesSearch =
+          student.name
+            ?.toLowerCase()
+            .includes(searchText) ||
+
+          student.email
+            ?.toLowerCase()
+            .includes(searchText) ||
+
+          student.department
+            ?.toLowerCase()
+            .includes(searchText) ||
+
+          student.studentId
+            ?.toLowerCase()
+            .includes(searchText);
+
+        const studentStatus =
+          student.status === "active"
+            ? "Active"
+            : "Inactive";
+
+        const matchesStatus =
+          statusFilter === "All" ||
+          studentStatus ===
+            statusFilter;
+
+        return (
+          matchesSearch &&
+          matchesStatus
+        );
+      }
+    );
+  }, [
+    students,
+    search,
+    statusFilter,
+  ]);
+
+  // =====================================================
+  // STATISTICS
+  // =====================================================
+
+  const totalStudents =
+    students.length;
+
+  const activeStudents =
+    students.filter(
+      (student) =>
+        student.status === "active"
+    ).length;
+
+  const inactiveStudents =
+    students.filter(
+      (student) =>
+        student.status === "blocked"
+    ).length;
+
+  // =====================================================
+  // DELETE
+  // =====================================================
+
+  const handleDelete = async (id) => {
+    alert(
+      "Delete API is not added yet. The student data is currently read-only."
+    );
+  };
+
+  // =====================================================
+  // UI
+  // =====================================================
+
+  return (
+    <div className="min-h-full bg-background p-6 md:p-8 text-foreground">
+
+      {/* HEADER */}
 
       <div className="mb-8">
 
-        <p className="text-sm font-semibold uppercase tracking-wider text-blue-600">
+        <p className="text-sm font-semibold uppercase tracking-wider text-primary">
           Administration
         </p>
 
-        <h1 className="mt-1 text-3xl font-bold text-slate-900 md:text-4xl">
+        <h1 className="mt-1 text-3xl font-bold text-foreground md:text-4xl">
           Student Management
         </h1>
 
-        <p className="mt-2 text-sm text-slate-500 md:text-base">
+        <p className="mt-2 text-sm text-muted-foreground md:text-base">
           Manage students and monitor their CampusConnect accounts.
         </p>
 
       </div>
 
-
-      {/* ================= STAT CARDS ================= */}
+      {/* STAT CARDS */}
 
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3">
 
-        {/* Total Students */}
+        {/* TOTAL */}
 
-        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+        <div className="rounded-2xl border border-border bg-card p-5 shadow-[0_12px_30px_-18px_rgba(79,70,229,0.28)]">
 
           <div className="flex items-start justify-between">
 
             <div>
-              <p className="text-sm font-medium text-slate-500">
+
+              <p className="text-sm font-medium text-muted-foreground">
                 Total Students
               </p>
 
-              <h2 className="mt-2 text-3xl font-bold text-slate-900">
+              <h2 className="mt-2 text-3xl font-bold text-foreground">
                 {totalStudents}
               </h2>
+
             </div>
 
             <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
@@ -147,21 +216,22 @@ function StudentManagement() {
 
         </div>
 
+        {/* ACTIVE */}
 
-        {/* Active Students */}
-
-        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+        <div className="rounded-2xl border border-border bg-card p-5 shadow-[0_12px_30px_-18px_rgba(79,70,229,0.28)]">
 
           <div className="flex items-start justify-between">
 
             <div>
-              <p className="text-sm font-medium text-slate-500">
+
+              <p className="text-sm font-medium text-muted-foreground">
                 Active Students
               </p>
 
-              <h2 className="mt-2 text-3xl font-bold text-slate-900">
+              <h2 className="mt-2 text-3xl font-bold text-foreground">
                 {activeStudents}
               </h2>
+
             </div>
 
             <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
@@ -172,21 +242,22 @@ function StudentManagement() {
 
         </div>
 
+        {/* INACTIVE */}
 
-        {/* Inactive Students */}
-
-        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+        <div className="rounded-2xl border border-border bg-card p-5 shadow-[0_12px_30px_-18px_rgba(79,70,229,0.28)]">
 
           <div className="flex items-start justify-between">
 
             <div>
-              <p className="text-sm font-medium text-slate-500">
+
+              <p className="text-sm font-medium text-muted-foreground">
                 Inactive Students
               </p>
 
-              <h2 className="mt-2 text-3xl font-bold text-slate-900">
+              <h2 className="mt-2 text-3xl font-bold text-foreground">
                 {inactiveStudents}
               </h2>
+
             </div>
 
             <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-orange-50 text-orange-600">
@@ -199,29 +270,29 @@ function StudentManagement() {
 
       </div>
 
+      {/* TABLE */}
 
-      {/* ================= STUDENT TABLE ================= */}
+      <section className="mt-8 rounded-2xl border border-border bg-card shadow-[0_12px_30px_-18px_rgba(79,70,229,0.28)]">
 
-      <section className="mt-8 rounded-2xl border border-slate-200 bg-white shadow-sm">
-
-        {/* Table Header */}
+        {/* TABLE HEADER */}
 
         <div className="border-b border-slate-200 p-6">
 
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
 
             <div>
+
               <h2 className="text-xl font-bold text-slate-900">
                 All Students
               </h2>
 
               <p className="mt-1 text-sm text-slate-500">
-                View and manage registered students.
+                View registered students from the CampusConnect database.
               </p>
+
             </div>
 
-
-            {/* Search */}
+            {/* SEARCH */}
 
             <div className="relative w-full lg:w-80">
 
@@ -233,7 +304,11 @@ function StudentManagement() {
               <input
                 type="text"
                 value={search}
-                onChange={(event) => setSearch(event.target.value)}
+                onChange={(event) =>
+                  setSearch(
+                    event.target.value
+                  )
+                }
                 placeholder="Search students..."
                 className="w-full rounded-full border border-slate-200 bg-slate-50 py-2.5 pl-10 pr-4 text-sm text-slate-700 outline-none transition focus:border-blue-300 focus:bg-white"
               />
@@ -242,217 +317,323 @@ function StudentManagement() {
 
           </div>
 
-
-          {/* Filters */}
+          {/* FILTER */}
 
           <div className="mt-5 flex flex-wrap gap-2">
 
-            {["All", "Active", "Inactive"].map((status) => (
+            {[
+              "All",
+              "Active",
+              "Inactive",
+            ].map((status) => (
+
               <button
                 key={status}
                 type="button"
-                onClick={() => setStatusFilter(status)}
+                onClick={() =>
+                  setStatusFilter(
+                    status
+                  )
+                }
                 className={`rounded-full px-4 py-2 text-sm font-medium transition ${
-                  statusFilter === status
+                  statusFilter ===
+                  status
                     ? "bg-blue-600 text-white"
                     : "border border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
                 }`}
               >
                 {status}
               </button>
+
             ))}
 
           </div>
 
         </div>
 
+        {/* LOADING */}
 
-        {/* Table */}
+        {loading && (
 
-        <div className="overflow-x-auto">
+          <div className="px-6 py-16 text-center">
 
-          <table className="w-full min-w-[850px]">
+            <div className="mx-auto h-8 w-8 animate-spin rounded-full border-4 border-slate-200 border-t-blue-600" />
 
-            <thead>
-              <tr className="border-b border-slate-200 bg-slate-50">
+            <p className="mt-4 text-sm text-slate-500">
+              Loading students...
+            </p>
 
-                <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
-                  Student
-                </th>
+          </div>
 
-                <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
-                  Course
-                </th>
+        )}
 
-                <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
-                  Year
-                </th>
+        {/* ERROR */}
 
-                <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
-                  Status
-                </th>
+        {!loading && error && (
 
-                <th className="px-6 py-4 text-right text-xs font-semibold uppercase tracking-wider text-slate-500">
-                  Actions
-                </th>
+          <div className="px-6 py-16 text-center">
 
-              </tr>
-            </thead>
+            <Users
+              size={35}
+              className="mx-auto text-red-300"
+            />
 
+            <p className="mt-3 font-semibold text-red-600">
+              {error}
+            </p>
 
-            <tbody>
+            <button
+              type="button"
+              onClick={fetchStudents}
+              className="mt-4 rounded-full bg-blue-600 px-5 py-2 text-sm font-medium text-white hover:bg-blue-700"
+            >
+              Retry
+            </button>
 
-              {filteredStudents.length > 0 ? (
+          </div>
 
-                filteredStudents.map((student) => (
+        )}
 
-                  <tr
-                    key={student.id}
-                    className="border-b border-slate-100 transition hover:bg-slate-50"
-                  >
+        {/* TABLE */}
 
-                    {/* Student */}
+        {!loading &&
+          !error && (
 
-                    <td className="px-6 py-4">
+            <div className="overflow-x-auto">
 
-                      <div className="flex items-center gap-3">
+              <table className="w-full min-w-[850px]">
 
-                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-blue-50 font-semibold text-blue-600">
-                          {student.name
-                            .split(" ")
-                            .map((word) => word[0])
-                            .join("")
-                            .slice(0, 2)}
-                        </div>
+                <thead>
 
-                        <div>
-                          <p className="font-semibold text-slate-800">
-                            {student.name}
-                          </p>
+                  <tr className="border-b border-slate-200 bg-slate-50">
 
-                          <p className="text-sm text-slate-500">
-                            {student.email}
-                          </p>
-                        </div>
+                    <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
+                      Student
+                    </th>
 
-                      </div>
+                    <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
+                      Department
+                    </th>
 
-                    </td>
+                    <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
+                      Year
+                    </th>
 
+                    <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
+                      Status
+                    </th>
 
-                    {/* Course */}
-
-                    <td className="px-6 py-4 text-sm text-slate-600">
-                      {student.course}
-                    </td>
-
-
-                    {/* Year */}
-
-                    <td className="px-6 py-4 text-sm text-slate-600">
-                      {student.year}
-                    </td>
-
-
-                    {/* Status */}
-
-                    <td className="px-6 py-4">
-
-                      <span
-                        className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${
-                          student.status === "Active"
-                            ? "bg-emerald-50 text-emerald-600"
-                            : "bg-orange-50 text-orange-600"
-                        }`}
-                      >
-                        {student.status}
-                      </span>
-
-                    </td>
-
-
-                    {/* Actions */}
-
-                    <td className="px-6 py-4">
-
-                      <div className="flex justify-end gap-2">
-
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setSelectedStudent(student)
-                          }
-                          className="flex h-9 w-9 items-center justify-center rounded-full text-slate-500 transition hover:bg-blue-50 hover:text-blue-600"
-                          title="View student"
-                        >
-                          <Eye size={17} />
-                        </button>
-
-                        <button
-                          type="button"
-                          className="flex h-9 w-9 items-center justify-center rounded-full text-slate-500 transition hover:bg-blue-50 hover:text-blue-600"
-                          title="Edit student"
-                        >
-                          <Pencil size={17} />
-                        </button>
-
-                        <button
-                          type="button"
-                          onClick={() =>
-                            handleDelete(student.id)
-                          }
-                          className="flex h-9 w-9 items-center justify-center rounded-full text-slate-500 transition hover:bg-red-50 hover:text-red-600"
-                          title="Delete student"
-                        >
-                          <Trash2 size={17} />
-                        </button>
-
-                      </div>
-
-                    </td>
+                    <th className="px-6 py-4 text-right text-xs font-semibold uppercase tracking-wider text-slate-500">
+                      Actions
+                    </th>
 
                   </tr>
 
-                ))
+                </thead>
 
-              ) : (
+                <tbody>
 
-                <tr>
+                  {filteredStudents.length >
+                  0 ? (
 
-                  <td
-                    colSpan="5"
-                    className="px-6 py-12 text-center"
-                  >
+                    filteredStudents.map(
+                      (student) => {
 
-                    <Users
-                      size={35}
-                      className="mx-auto text-slate-300"
-                    />
+                        const displayStatus =
+                          student.status ===
+                          "active"
+                            ? "Active"
+                            : "Inactive";
 
-                    <p className="mt-3 font-semibold text-slate-700">
-                      No students found
-                    </p>
+                        return (
 
-                    <p className="mt-1 text-sm text-slate-500">
-                      Try changing your search or filter.
-                    </p>
+                          <tr
+                            key={
+                              student._id
+                            }
+                            className="border-b border-slate-100 transition hover:bg-slate-50"
+                          >
 
-                  </td>
+                            {/* STUDENT */}
 
-                </tr>
+                            <td className="px-6 py-4">
 
-              )}
+                              <div className="flex items-center gap-3">
 
-            </tbody>
+                                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-blue-50 font-semibold text-blue-600">
 
-          </table>
+                                  {student.name
+                                    ?.split(
+                                      " "
+                                    )
+                                    .map(
+                                      (word) =>
+                                        word[0]
+                                    )
+                                    .join(
+                                      ""
+                                    )
+                                    .slice(
+                                      0,
+                                      2
+                                    )}
 
-        </div>
+                                </div>
+
+                                <div>
+
+                                  <p className="font-semibold text-slate-800">
+                                    {
+                                      student.name
+                                    }
+                                  </p>
+
+                                  <p className="text-sm text-slate-500">
+                                    {
+                                      student.email
+                                    }
+                                  </p>
+
+                                </div>
+
+                              </div>
+
+                            </td>
+
+                            {/* DEPARTMENT */}
+
+                            <td className="px-6 py-4 text-sm text-slate-600">
+                              {student.department ||
+                                "Not specified"}
+                            </td>
+
+                            {/* YEAR */}
+
+                            <td className="px-6 py-4 text-sm text-slate-600">
+                              {student.year ||
+                                "Not specified"}
+                            </td>
+
+                            {/* STATUS */}
+
+                            <td className="px-6 py-4">
+
+                              <span
+                                className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${
+                                  displayStatus ===
+                                  "Active"
+                                    ? "bg-emerald-50 text-emerald-600"
+                                    : "bg-orange-50 text-orange-600"
+                                }`}
+                              >
+                                {
+                                  displayStatus
+                                }
+                              </span>
+
+                            </td>
+
+                            {/* ACTIONS */}
+
+                            <td className="px-6 py-4">
+
+                              <div className="flex justify-end gap-2">
+
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    setSelectedStudent(
+                                      student
+                                    )
+                                  }
+                                  className="flex h-9 w-9 items-center justify-center rounded-full text-slate-500 transition hover:bg-blue-50 hover:text-blue-600"
+                                  title="View student"
+                                >
+                                  <Eye
+                                    size={
+                                      17
+                                    }
+                                  />
+                                </button>
+
+                                <button
+                                  type="button"
+                                  className="flex h-9 w-9 items-center justify-center rounded-full text-slate-500 transition hover:bg-blue-50 hover:text-blue-600"
+                                  title="Edit student"
+                                >
+                                  <Pencil
+                                    size={
+                                      17
+                                    }
+                                  />
+                                </button>
+
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    handleDelete(
+                                      student._id
+                                    )
+                                  }
+                                  className="flex h-9 w-9 items-center justify-center rounded-full text-slate-500 transition hover:bg-red-50 hover:text-red-600"
+                                  title="Delete student"
+                                >
+                                  <Trash2
+                                    size={
+                                      17
+                                    }
+                                  />
+                                </button>
+
+                              </div>
+
+                            </td>
+
+                          </tr>
+
+                        );
+                      }
+                    )
+
+                  ) : (
+
+                    <tr>
+
+                      <td
+                        colSpan="5"
+                        className="px-6 py-12 text-center"
+                      >
+
+                        <Users
+                          size={35}
+                          className="mx-auto text-slate-300"
+                        />
+
+                        <p className="mt-3 font-semibold text-slate-700">
+                          No students found
+                        </p>
+
+                        <p className="mt-1 text-sm text-slate-500">
+                          No registered students match your search.
+                        </p>
+
+                      </td>
+
+                    </tr>
+
+                  )}
+
+                </tbody>
+
+              </table>
+
+            </div>
+
+          )}
 
       </section>
 
-
-      {/* ================= STUDENT DETAILS MODAL ================= */}
+      {/* STUDENT DETAILS */}
 
       {selectedStudent && (
 
@@ -460,7 +641,7 @@ function StudentManagement() {
 
           <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white shadow-xl">
 
-            {/* Modal Header */}
+            {/* HEADER */}
 
             <div className="flex items-center justify-between border-b border-slate-200 p-5">
 
@@ -470,7 +651,11 @@ function StudentManagement() {
 
               <button
                 type="button"
-                onClick={() => setSelectedStudent(null)}
+                onClick={() =>
+                  setSelectedStudent(
+                    null
+                  )
+                }
                 className="flex h-9 w-9 items-center justify-center rounded-full text-slate-400 hover:bg-slate-100 hover:text-slate-700"
               >
                 <X size={18} />
@@ -478,86 +663,137 @@ function StudentManagement() {
 
             </div>
 
-
-            {/* Modal Content */}
+            {/* CONTENT */}
 
             <div className="p-6">
 
               <div className="flex items-center gap-4">
 
                 <div className="flex h-14 w-14 items-center justify-center rounded-full bg-blue-50 text-lg font-bold text-blue-600">
+
                   {selectedStudent.name
-                    .split(" ")
-                    .map((word) => word[0])
+                    ?.split(" ")
+                    .map(
+                      (word) =>
+                        word[0]
+                    )
                     .join("")
                     .slice(0, 2)}
+
                 </div>
 
                 <div>
 
                   <h3 className="text-lg font-bold text-slate-900">
-                    {selectedStudent.name}
+                    {
+                      selectedStudent.name
+                    }
                   </h3>
 
                   <p className="text-sm text-slate-500">
-                    {selectedStudent.email}
+                    {
+                      selectedStudent.email
+                    }
                   </p>
 
                 </div>
 
               </div>
 
-
               <div className="mt-6 space-y-4">
 
                 <div>
+
                   <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
-                    Course
+                    Student ID
                   </p>
 
                   <p className="mt-1 text-sm font-medium text-slate-800">
-                    {selectedStudent.course}
+                    {selectedStudent.studentId ||
+                      "Not specified"}
                   </p>
+
                 </div>
 
                 <div>
+
+                  <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+                    Department
+                  </p>
+
+                  <p className="mt-1 text-sm font-medium text-slate-800">
+                    {selectedStudent.department ||
+                      "Not specified"}
+                  </p>
+
+                </div>
+
+                <div>
+
                   <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
                     Year
                   </p>
 
                   <p className="mt-1 text-sm font-medium text-slate-800">
-                    {selectedStudent.year}
+                    {selectedStudent.year ||
+                      "Not specified"}
                   </p>
+
                 </div>
 
                 <div>
+
                   <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
                     Status
                   </p>
 
                   <span
                     className={`mt-1 inline-flex rounded-full px-3 py-1 text-xs font-semibold ${
-                      selectedStudent.status === "Active"
+                      selectedStudent.status ===
+                      "active"
                         ? "bg-emerald-50 text-emerald-600"
                         : "bg-orange-50 text-orange-600"
                     }`}
                   >
-                    {selectedStudent.status}
+                    {selectedStudent.status ===
+                    "active"
+                      ? "Active"
+                      : "Inactive"}
                   </span>
+
+                </div>
+
+                <div>
+
+                  <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+                    Registered On
+                  </p>
+
+                  <p className="mt-1 text-sm font-medium text-slate-800">
+                    {selectedStudent.createdAt
+                      ? new Date(
+                          selectedStudent.createdAt
+                        ).toLocaleString()
+                      : "Not available"}
+                  </p>
+
                 </div>
 
               </div>
 
             </div>
 
-
-            {/* Modal Footer */}
+            {/* FOOTER */}
 
             <div className="flex justify-end border-t border-slate-200 p-5">
 
               <button
                 type="button"
-                onClick={() => setSelectedStudent(null)}
+                onClick={() =>
+                  setSelectedStudent(
+                    null
+                  )
+                }
                 className="rounded-full bg-blue-600 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-blue-700"
               >
                 Close

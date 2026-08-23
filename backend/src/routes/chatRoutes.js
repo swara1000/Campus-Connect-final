@@ -3,6 +3,7 @@ import express from "express";
 import {
   getOrCreatePeerConversation,
   getMyConversations,
+  getUnreadMessageCount,
   getMessages,
   sendMessage,
 } from "../controllers/chatController.js";
@@ -11,30 +12,53 @@ import {
   protect,
 } from "../middleware/authMiddleware.js";
 
-const router = express.Router();
+const router =
+  express.Router();
 
-// GET ALL MY CONVERSATIONS
+/* =====================================================
+   GET ALL MY CONVERSATIONS
+===================================================== */
+
 router.get(
   "/conversations",
   protect,
   getMyConversations
 );
 
-// OPEN / CREATE CONVERSATION FROM PEER LEARNING MATCH
+/* =====================================================
+   GET UNREAD MESSAGE COUNT
+===================================================== */
+
+router.get(
+  "/unread-count",
+  protect,
+  getUnreadMessageCount
+);
+
+/* =====================================================
+   OPEN / CREATE CONVERSATION
+===================================================== */
+
 router.post(
   "/peer-learning/:requestId",
   protect,
   getOrCreatePeerConversation
 );
 
-// GET MESSAGES
+/* =====================================================
+   GET MESSAGES
+===================================================== */
+
 router.get(
   "/conversations/:conversationId/messages",
   protect,
   getMessages
 );
 
-// SEND MESSAGE
+/* =====================================================
+   SEND MESSAGE
+===================================================== */
+
 router.post(
   "/conversations/:conversationId/messages",
   protect,

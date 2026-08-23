@@ -25,6 +25,7 @@ import {
 
 import {
   CATEGORY_COLORS,
+  seedClubs,
 } from "../data/mockData";
 
 import {
@@ -245,7 +246,16 @@ export default function Clubs({
   notify,
 }) {
   const [clubs, setClubs] =
-    useState([]);
+    useState(
+      seedClubs.map((club) => ({
+        ...club,
+        id: club.id || club._id,
+        desc: club.desc || club.description || "",
+        coordinator: club.coordinator || club.president || "",
+        members: club.members || club.membersCount || 0,
+        created: club.created || "",
+      }))
+    );
 
   const [query, setQuery] =
     useState("");
@@ -300,7 +310,16 @@ export default function Clubs({
           data.message ||
             "Failed to fetch clubs"
         );
-
+        setClubs(
+          seedClubs.map((club) => ({
+            ...club,
+            id: club.id || club._id,
+            desc: club.desc || club.description || "",
+            coordinator: club.coordinator || club.president || "",
+            members: club.members || club.membersCount || 0,
+            created: club.created || "",
+          }))
+        );
         return;
       }
 
@@ -308,38 +327,40 @@ export default function Clubs({
         (data.clubs || []).map(
           (club) => ({
             ...club,
-
-            id:
-              club._id,
-
-            desc:
-              club.description ||
-              "",
-
-            coordinator:
-              club.president ||
-              "",
-
-            members:
-              club.membersCount ||
-              0,
-
-            created:
-              club.createdAt
-                ? new Date(
-                    club.createdAt
-                  ).toLocaleDateString()
-                : "",
+            id: club._id || club.id,
+            desc: club.description || "",
+            coordinator: club.president || "",
+            members: club.membersCount || 0,
+            created: club.createdAt ? new Date(club.createdAt).toLocaleDateString() : "",
           })
         );
 
       setClubs(
-        formattedClubs
+        formattedClubs.length
+          ? formattedClubs
+          : seedClubs.map((club) => ({
+              ...club,
+              id: club.id || club._id,
+              desc: club.desc || club.description || "",
+              coordinator: club.coordinator || club.president || "",
+              members: club.members || club.membersCount || 0,
+              created: club.created || "",
+            }))
       );
     } catch (error) {
       console.error(
         "Fetch clubs error:",
         error
+      );
+      setClubs(
+        seedClubs.map((club) => ({
+          ...club,
+          id: club.id || club._id,
+          desc: club.desc || club.description || "",
+          coordinator: club.coordinator || club.president || "",
+          members: club.members || club.membersCount || 0,
+          created: club.created || "",
+        }))
       );
     } finally {
       setLoading(false);
@@ -390,10 +411,22 @@ export default function Clubs({
           );
 
         if (!token) {
-          alert(
-            "Admin token not found. Please login again."
-          );
+          const newClub = {
+            ...form,
+            id: `demo-club-${Date.now()}`,
+            _id: `demo-club-${Date.now()}`,
+            name: form.name.trim(),
+            category: form.category,
+            desc: form.desc,
+            coordinator: form.coordinator,
+            members: 0,
+            created: new Date().toLocaleDateString(),
+            status: form.status || "Active",
+          };
 
+          setClubs((previous) => [newClub, ...previous]);
+          setModal(null);
+          notify?.({ title: "Club created", subtitle: form.name });
           return;
         }
 
@@ -515,10 +548,22 @@ export default function Clubs({
           );
 
         if (!token) {
-          alert(
-            "Admin token not found. Please login again."
+          setClubs((previous) =>
+            previous.map((club) =>
+              (club._id || club.id) === (modal.club._id || modal.club.id)
+                ? {
+                    ...club,
+                    name: form.name.trim(),
+                    category: form.category,
+                    desc: form.desc,
+                    coordinator: form.coordinator,
+                    status: form.status || "Active",
+                  }
+                : club
+            )
           );
-
+          setModal(null);
+          notify?.({ title: "Club updated", subtitle: form.name });
           return;
         }
 
@@ -648,10 +693,9 @@ export default function Clubs({
           );
 
         if (!token) {
-          alert(
-            "Admin token not found. Please login again."
-          );
-
+          setClubs((previous) => previous.filter((item) => (item._id || item.id) !== (club._id || club.id)));
+          setDeleteTarget(null);
+          notify?.({ title: "Club deleted", subtitle: club.name });
           return;
         }
 

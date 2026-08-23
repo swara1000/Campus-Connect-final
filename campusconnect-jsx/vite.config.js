@@ -7,7 +7,7 @@ export default defineConfig({
     },
 
     router: {
-      generatedRouteTree: "src/routeTree.gen.js",
+      generatedRouteTree: "routeTree.gen.ts",
       quoteStyle: "single",
     },
   },

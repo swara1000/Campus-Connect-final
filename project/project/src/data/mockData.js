@@ -68,6 +68,17 @@ export const seedStudents = [
   { name: "Yash Malhotra", rollNo: "2022020", department: "Computer Science", year: "3rd year" },
 ];
 
+export const seedAdminStudents = [
+  { id: "s1", name: "Aarav Sharma", email: "aarav.sharma@campusconnect.edu", course: "Computer Engineering", year: "Third Year", status: "Active" },
+  { id: "s2", name: "Priya Patil", email: "priya.patil@campusconnect.edu", course: "Information Technology", year: "Second Year", status: "Active" },
+  { id: "s3", name: "Rahul Deshmukh", email: "rahul.deshmukh@campusconnect.edu", course: "Computer Science", year: "Final Year", status: "Inactive" },
+  { id: "s4", name: "Sneha Kulkarni", email: "sneha.kulkarni@campusconnect.edu", course: "Electronics and Communication", year: "Third Year", status: "Active" },
+  { id: "s5", name: "Rohan Joshi", email: "rohan.joshi@campusconnect.edu", course: "Mechanical Engineering", year: "Second Year", status: "Active" },
+  { id: "s6", name: "Meera Rao", email: "meera.rao@campusconnect.edu", course: "Civil Engineering", year: "Final Year", status: "Active" },
+  { id: "s7", name: "Kabir Gupta", email: "kabir.gupta@campusconnect.edu", course: "Computer Science", year: "Third Year", status: "Active" },
+  { id: "s8", name: "Ananya Chopra", email: "ananya.chopra@campusconnect.edu", course: "Design", year: "Second Year", status: "Inactive" },
+];
+
 // Notification-bell inbox preview (the "3 new notifications" popover).
 export const seedInboxAlerts = [
   { id: "a1", label: "Learning request", detail: "Ananya Chopra requested access to the Data Science track.", time: "10m ago" },

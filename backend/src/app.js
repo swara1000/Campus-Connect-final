@@ -1,18 +1,27 @@
 import express from "express";
 import cors from "cors";
 
+// =====================================================
 // ROUTES
+// =====================================================
+
 import authRoutes from "./routes/authRoutes.js";
+import studentRoutes from "./routes/studentRoutes.js";
+
 import eventRoutes from "./routes/eventRoutes.js";
 import clubRoutes from "./routes/clubRoutes.js";
 import peerLearningRoutes from "./routes/peerLearningRoutes.js";
 import chatRoutes from "./routes/chatRoutes.js";
 import aiRoutes from "./routes/aiRoutes.js";
 import studyMaterialRoutes from "./routes/studyMaterialRoutes.js";
+import notificationRoutes from "./routes/notificationRoutes.js";
 
 const app = express();
 
+// =====================================================
 // CORS
+// =====================================================
+
 app.use(
   cors({
     origin: [
@@ -23,24 +32,76 @@ app.use(
       "http://localhost:8080",
       "http://localhost:8081",
     ],
+
     credentials: true,
   })
 );
 
+// =====================================================
 // MIDDLEWARE
+// =====================================================
+
 app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
 
+app.use(
+  express.urlencoded({
+    extended: true,
+  })
+);
+
+// =====================================================
 // APIs
-app.use("/api/auth", authRoutes);
-app.use("/api/events", eventRoutes);
-app.use("/api/clubs", clubRoutes);
-app.use("/api/peer-learning", peerLearningRoutes);
-app.use("/api/chat", chatRoutes);
-app.use("/api/ai", aiRoutes);
-app.use("/api/study-materials", studyMaterialRoutes);
+// =====================================================
 
-// TEST ROUTES
+app.use(
+  "/api/auth",
+  authRoutes
+);
+
+app.use(
+  "/api/students",
+  studentRoutes
+);
+
+app.use(
+  "/api/events",
+  eventRoutes
+);
+
+app.use(
+  "/api/clubs",
+  clubRoutes
+);
+
+app.use(
+  "/api/peer-learning",
+  peerLearningRoutes
+);
+
+app.use(
+  "/api/chat",
+  chatRoutes
+);
+
+app.use(
+  "/api/ai",
+  aiRoutes
+);
+
+app.use(
+  "/api/study-materials",
+  studyMaterialRoutes
+);
+
+app.use(
+  "/api/notifications",
+  notificationRoutes
+);
+
+// =====================================================
+// TEST
+// =====================================================
+
 app.get("/", (req, res) => {
   res.json({
     success: true,

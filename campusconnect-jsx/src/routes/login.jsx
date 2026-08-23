@@ -91,64 +91,206 @@ function LoginPage() {
      GOOGLE RESPONSE
   ===================================================== */
 
-  const handleGoogleResponse = (
-    response
-  ) => {
-    setError("");
+  const handleGoogleResponse = async (response) => {
+  setError("");
 
-    if (!response?.credential) {
+  if (!response?.credential) {
+    setError(
+      "Google sign-in failed. Please try again."
+    );
+
+    return;
+  }
+
+  const googleUser =
+    decodeGoogleCredential(
+      response.credential
+    );
+
+  if (!googleUser) {
+    setError(
+      "Unable to read Google account information."
+    );
+
+    return;
+  }
+
+  const name =
+    googleUser.name ||
+    googleUser.given_name ||
+    "Student";
+
+  const email =
+    googleUser.email
+      ?.trim()
+      .toLowerCase();
+
+  if (!email) {
+    setError(
+      "Google account email could not be found."
+    );
+
+    return;
+  }
+
+  try {
+    /*
+      Send the Google account information to
+      our backend.
+
+      IMPORTANT:
+      We do NOT use googleUser.sub as the
+      CampusConnect user ID.
+
+      The backend will find/create the MongoDB
+      user and return the MongoDB _id.
+    */
+
+    const responseFromBackend =
+      await fetch(
+        "http://localhost:5000/api/auth/google",
+        {
+          method: "POST",
+
+          headers: {
+            "Content-Type":
+              "application/json",
+          },
+
+          body: JSON.stringify({
+            googleId:
+              googleUser.sub,
+
+            name,
+
+            email,
+
+            avatar:
+              googleUser.picture || "",
+          }),
+        }
+      );
+
+    const data =
+      await responseFromBackend.json();
+
+    console.log(
+      "Google backend response:",
+      data
+    );
+
+    if (!responseFromBackend.ok) {
       setError(
-        "Google sign-in failed. Please try again."
+        data.message ||
+          "Google login failed."
       );
 
       return;
     }
 
-    const googleUser =
-      decodeGoogleCredential(
-        response.credential
+    /*
+      The backend must return:
+
+      data.token
+      data.user.id
+
+      where data.user.id is the MongoDB
+      User._id.
+    */
+
+    if (!data.token || !data.user) {
+      console.error(
+        "Invalid Google login response:",
+        data
       );
 
-    if (!googleUser) {
       setError(
-        "Unable to read Google account information."
+        "Google login returned an invalid response."
       );
 
       return;
     }
 
-    const name =
-      googleUser.name ||
-      googleUser.given_name ||
-      "Student";
+    /*
+      Save JWT
+    */
 
-    const user = {
-      id: googleUser.sub,
+    localStorage.setItem(
+      "campusconnect_token",
+      data.token
+    );
 
-      name,
+    /*
+      Save MongoDB user
+    */
 
-      email:
-        googleUser.email || "",
+    localStorage.setItem(
+      "campusconnect_user",
+      JSON.stringify(data.user)
+    );
+
+    /*
+      IMPORTANT:
+
+      signIn() now receives the MongoDB
+      user returned by the backend.
+
+      Therefore campus-store.jsx will use:
+
+          data.user.id
+
+      instead of:
+
+          googleUser.sub
+    */
+
+    signIn({
+      ...data.user,
+
+      id:
+        data.user.id ||
+        data.user._id,
+
+      _id:
+        data.user._id ||
+        data.user.id,
 
       avatar:
-        googleUser.picture || "",
-
-      initials:
-        getInitials(name),
-
-      role: "student",
+        data.user.avatar ||
+        googleUser.picture ||
+        "",
 
       loginProvider: "google",
-    };
+    });
 
-    /* Save logged-in Google user */
-    signIn(user);
+    console.log(
+      "Google login successful."
+    );
 
-    /* Go to dashboard */
+    console.log(
+      "MongoDB User ID:",
+      data.user.id ||
+        data.user._id
+    );
+
+    /*
+      Go to dashboard
+    */
+
     navigate({
       to: "/dashboard",
     });
-  };
+  } catch (error) {
+    console.error(
+      "Google login error:",
+      error
+    );
+
+    setError(
+      "Cannot connect to backend. Make sure the backend is running."
+    );
+  }
+};
 
   /* =====================================================
      LOAD GOOGLE IDENTITY SERVICES

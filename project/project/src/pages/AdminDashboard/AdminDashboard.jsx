@@ -110,18 +110,18 @@ export default function AdminDashboard() {
   );
 
   return (
-    <div>
+    <div className="min-h-full bg-background text-foreground">
       <div className="mb-8 flex flex-col justify-between gap-4 md:flex-row md:items-center">
         <div>
-          <h2 className="text-3xl font-bold text-slate-900">Welcome back, Administrator 👋</h2>
-          <p className="mt-2 text-slate-500">Here is an overview of your CampusConnect platform.</p>
+          <h2 className="text-3xl font-bold text-foreground">Welcome back, Administrator 👋</h2>
+          <p className="mt-2 text-muted-foreground">Here is an overview of your CampusConnect platform.</p>
         </div>
 
         <div className="flex flex-col gap-3 sm:flex-row">
           <button
             type="button"
             onClick={() => navigate("/admin/events")}
-            className={`flex items-center justify-center gap-2 rounded-full bg-blue-600 px-5 py-3 font-medium text-white transition hover:bg-blue-700 ${primaryBtnShadowCls}`}
+            className={`flex items-center justify-center gap-2 rounded-full bg-gradient-brand px-5 py-3 font-medium text-white transition ${primaryBtnShadowCls}`}
           >
             <Plus size={19} />
             Add Event
@@ -130,7 +130,7 @@ export default function AdminDashboard() {
           <button
             type="button"
             onClick={() => navigate("/admin/clubs")}
-            className="flex items-center justify-center gap-2 rounded-full border border-slate-300 bg-white px-5 py-3 font-medium text-slate-700 transition hover:bg-slate-50"
+            className="flex items-center justify-center gap-2 rounded-full border border-border bg-card px-5 py-3 font-medium text-foreground transition hover:bg-accent"
           >
             <Plus size={19} />
             Add Club
@@ -147,34 +147,34 @@ export default function AdminDashboard() {
 
       <div className="mt-8 grid grid-cols-1 gap-6 xl:grid-cols-3">
         {/* Recent activities */}
-        <section className={`rounded-2xl border border-slate-100 bg-white p-6 xl:col-span-2 ${cardShadowCls}`}>
+        <section className={`rounded-2xl border border-border bg-card p-6 xl:col-span-2 ${cardShadowCls}`}>
           <div className="mb-6 flex items-center justify-between">
             <div>
-              <h3 className="text-xl font-bold text-slate-900">Recent Activities</h3>
-              <p className="mt-1 text-sm text-slate-500">Latest updates in the admin panel.</p>
+              <h3 className="text-xl font-bold text-foreground">Recent Activities</h3>
+              <p className="mt-1 text-sm text-muted-foreground">Latest updates in the admin panel.</p>
             </div>
           </div>
 
           <div className="space-y-4">
             {recentActivities.map((activity) => (
-              <div key={activity.id} className="flex items-start gap-4 rounded-2xl bg-slate-50 p-4">
-                <div className="mt-1 h-3 w-3 shrink-0 rounded-full bg-blue-600" />
+              <div key={activity.id} className="flex items-start gap-4 rounded-2xl bg-muted p-4">
+                <div className="mt-1 h-3 w-3 shrink-0 rounded-full bg-primary" />
 
                 <div className="flex-1">
-                  <h4 className="font-semibold text-slate-800">{activity.title}</h4>
-                  <p className="mt-1 text-sm text-slate-500">{activity.description}</p>
+                  <h4 className="font-semibold text-foreground">{activity.title}</h4>
+                  <p className="mt-1 text-sm text-muted-foreground">{activity.description}</p>
                 </div>
 
-                <p className="hidden text-xs text-slate-400 sm:block">{activity.time}</p>
+                <p className="hidden text-xs text-muted-foreground sm:block">{activity.time}</p>
               </div>
             ))}
           </div>
         </section>
 
         {/* Quick actions */}
-        <section className={`rounded-2xl border border-slate-100 bg-white p-6 ${cardShadowCls}`}>
-          <h3 className="text-xl font-bold text-slate-900">Quick Actions</h3>
-          <p className="mt-1 text-sm text-slate-500">Quickly manage campus modules.</p>
+        <section className={`rounded-2xl border border-border bg-card p-6 ${cardShadowCls}`}>
+          <h3 className="text-xl font-bold text-foreground">Quick Actions</h3>
+          <p className="mt-1 text-sm text-muted-foreground">Quickly manage campus modules.</p>
 
           <div className="mt-6 space-y-3">
             {quickActions.map((action) => {
@@ -184,13 +184,13 @@ export default function AdminDashboard() {
                   key={action.path}
                   type="button"
                   onClick={() => navigate(action.path)}
-                  className="flex w-full items-center gap-3 rounded-2xl border border-slate-200 p-4 text-left transition hover:border-blue-300 hover:bg-blue-50"
+                  className="flex w-full items-center gap-3 rounded-2xl border border-border bg-card p-4 text-left transition hover:border-primary/40 hover:bg-primary/5"
                 >
                   <Icon size={22} className={action.tint} />
 
                   <div>
-                    <p className="font-semibold text-slate-800">{action.label}</p>
-                    <p className="text-sm text-slate-500">{action.description}</p>
+                    <p className="font-semibold text-foreground">{action.label}</p>
+                    <p className="text-sm text-muted-foreground">{action.description}</p>
                   </div>
                 </button>
               );

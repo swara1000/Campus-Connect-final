@@ -6,43 +6,81 @@ import {
   createPeerLearningRequest,
   acceptPeerLearningRequest,
   cancelPeerLearningRequest,
+  adminApprovePeerLearningRequest,
+  adminRejectPeerLearningRequest,
 } from "../controllers/peerLearningController.js";
 
 import {
   protect,
 } from "../middleware/authMiddleware.js";
 
-const router = express.Router();
+const router =
+  express.Router();
 
-// ALL STUDENTS CAN VIEW
+/* =====================================================
+   GET ALL PEER LEARNING REQUESTS
+===================================================== */
+
 router.get(
   "/",
   protect,
   getPeerLearningRequests
 );
 
-// ONE REQUEST
+/* =====================================================
+   GET ONE REQUEST
+===================================================== */
+
 router.get(
   "/:id",
   protect,
   getPeerLearningRequestById
 );
 
-// CREATE REQUEST
+/* =====================================================
+   CREATE REQUEST - STUDENT
+===================================================== */
+
 router.post(
   "/",
   protect,
   createPeerLearningRequest
 );
 
-// ACCEPT REQUEST
+/* =====================================================
+   ACCEPT REQUEST - STUDENT
+===================================================== */
+
 router.post(
   "/:id/accept",
   protect,
   acceptPeerLearningRequest
 );
 
-// CANCEL OWN REQUEST
+/* =====================================================
+   ADMIN APPROVE REQUEST
+===================================================== */
+
+router.post(
+  "/:id/admin-approve",
+  protect,
+  adminApprovePeerLearningRequest
+);
+
+/* =====================================================
+   ADMIN REJECT REQUEST
+===================================================== */
+
+router.post(
+  "/:id/admin-reject",
+  protect,
+  adminRejectPeerLearningRequest
+);
+
+/* =====================================================
+   CANCEL OWN REQUEST - STUDENT
+===================================================== */
+
 router.patch(
   "/:id/cancel",
   protect,

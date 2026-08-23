@@ -19,7 +19,7 @@ import {
   StatCard,
 } from "./Shared";
 
-import { SEMESTER_OPTIONS } from "../data/mockData";
+import { SEMESTER_OPTIONS, seedMaterials } from "../data/mockData";
 
 import {
   formatDate,
@@ -217,7 +217,14 @@ export default function StudyMaterials({
   notify,
 }) {
   const [materials, setMaterials] =
-    useState([]);
+    useState(
+      seedMaterials.map((material) => ({
+        ...material,
+        id: material.id || material._id,
+        uploaded: material.uploaded || material.createdAt || "",
+        fileName: material.fileName || "No file",
+      }))
+    );
 
   const [query, setQuery] =
     useState("");
@@ -260,11 +267,6 @@ export default function StudyMaterials({
       const data =
         await response.json();
 
-      console.log(
-        "Study materials:",
-        data
-      );
-
       if (!response.ok) {
         throw new Error(
           data.message ||
@@ -274,32 +276,54 @@ export default function StudyMaterials({
 
       if (data.success) {
         const formatted =
-          data.materials.map(
+          (data.materials || []).map(
             (material) => ({
               ...material,
-
-              id:
-                material._id ||
-                material.id,
-
-              uploaded:
-                material.createdAt ||
-                material.uploaded,
+              id: material._id || material.id,
+              uploaded: material.createdAt || material.uploaded,
             })
           );
 
-        setMaterials(formatted);
+        setMaterials(
+          formatted.length
+            ? formatted
+            : seedMaterials.map((material) => ({
+                ...material,
+                id: material.id || material._id,
+                uploaded: material.uploaded || material.createdAt || "",
+                fileName: material.fileName || "No file",
+              }))
+        );
+        return;
       }
+
+      setMaterials(
+        seedMaterials.map((material) => ({
+          ...material,
+          id: material.id || material._id,
+          uploaded: material.uploaded || material.createdAt || "",
+          fileName: material.fileName || "No file",
+        }))
+      );
     } catch (error) {
       console.error(
         "Fetch study materials error:",
         error
       );
 
+      setMaterials(
+        seedMaterials.map((material) => ({
+          ...material,
+          id: material.id || material._id,
+          uploaded: material.uploaded || material.createdAt || "",
+          fileName: material.fileName || "No file",
+        }))
+      );
+
       showNotification({
         title:
-          "Unable to load materials",
-        subtitle: error.message,
+          "Using demo materials",
+        subtitle: "The admin view is showing the default campus material library.",
       });
     } finally {
       setLoading(false);
@@ -375,10 +399,27 @@ export default function StudyMaterials({
     form
   ) => {
     try {
-      console.log(
-        "Creating material:",
-        form
-      );
+      const token = localStorage.getItem("adminToken");
+
+      if (!token) {
+        const newMaterial = {
+          ...form,
+          id: `demo-material-${Date.now()}`,
+          _id: `demo-material-${Date.now()}`,
+          title: form.title.trim(),
+          subject: form.subject.trim(),
+          semester: String(form.semester),
+          type: form.type || "Notes",
+          summary: form.summary || "",
+          fileName: form.fileName || "No file",
+          uploaded: new Date().toISOString(),
+        };
+
+        setMaterials((previous) => [newMaterial, ...previous]);
+        setModal(null);
+        showNotification({ title: "Material uploaded", subtitle: form.title });
+        return;
+      }
 
       const response = await fetch(
         API_URL,
@@ -466,6 +507,29 @@ export default function StudyMaterials({
         return;
       }
 
+      const token = localStorage.getItem("adminToken");
+
+      if (!token) {
+        setMaterials((previous) =>
+          previous.map((material) =>
+            (material._id || material.id) === (modal.material._id || modal.material.id)
+              ? {
+                  ...material,
+                  title: form.title.trim(),
+                  subject: form.subject.trim(),
+                  semester: String(form.semester),
+                  type: form.type || "Notes",
+                  summary: form.summary || "",
+                  fileName: form.fileName || material.fileName || "No file",
+                }
+              : material
+          )
+        );
+        setModal(null);
+        showNotification({ title: "Material updated", subtitle: form.title });
+        return;
+      }
+
       const materialId =
         modal.material._id ||
         modal.material.id;
@@ -547,6 +611,17 @@ export default function StudyMaterials({
     }
 
     try {
+      const token = localStorage.getItem("adminToken");
+
+      if (!token) {
+        setMaterials((previous) =>
+          previous.filter((material) => (material._id || material.id) !== (deleteTarget._id || deleteTarget.id))
+        );
+        setDeleteTarget(null);
+        showNotification({ title: "Material deleted", subtitle: deleteTarget.title });
+        return;
+      }
+
       const materialId =
         deleteTarget._id ||
         deleteTarget.id;

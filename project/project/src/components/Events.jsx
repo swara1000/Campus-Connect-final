@@ -22,6 +22,7 @@ import {
 import {
   seedClubs,
   seedStudents,
+  seedEvents,
   STATUS_STYLES,
 } from "../data/mockData";
 
@@ -197,7 +198,9 @@ export default function Events({ notify }) {
     (club) => club.name
   );
 
-  const [events, setEvents] = useState([]);
+  const [events, setEvents] = useState(
+    seedEvents.map((event) => ({ ...event, id: event.id || event._id }))
+  );
 
   const [query, setQuery] =
     useState("");
@@ -241,6 +244,9 @@ export default function Events({ notify }) {
           data.message ||
             "Failed to fetch events"
         );
+        setEvents(
+          seedEvents.map((event) => ({ ...event, id: event.id || event._id }))
+        );
         return;
       }
 
@@ -248,19 +254,22 @@ export default function Events({ notify }) {
         (data.events || []).map(
           (event) => ({
             ...event,
-
-            // Existing UI uses event.id
-            id: event._id,
+            id: event._id || event.id,
           })
         );
 
       setEvents(
-        formattedEvents
+        formattedEvents.length
+          ? formattedEvents
+          : seedEvents.map((event) => ({ ...event, id: event.id || event._id }))
       );
     } catch (error) {
       console.error(
         "Fetch events error:",
         error
+      );
+      setEvents(
+        seedEvents.map((event) => ({ ...event, id: event.id || event._id }))
       );
     } finally {
       setLoading(false);
@@ -319,9 +328,23 @@ export default function Events({ notify }) {
         );
 
       if (!token) {
-        alert(
-          "Admin token not found. Please login again."
-        );
+        const newEvent = {
+          ...form,
+          id: `demo-${Date.now()}`,
+          _id: `demo-${Date.now()}`,
+          name: form.name.trim(),
+          club: form.club,
+          desc: form.desc,
+          date: form.date,
+          venue: form.venue,
+          regCount: Number(form.regCap) || 100,
+          regCap: Number(form.regCap) || 100,
+          status: form.status,
+        };
+
+        setEvents((previous) => [newEvent, ...previous]);
+        setModal(null);
+        notify?.({ title: "Event created", subtitle: form.name });
         return;
       }
 
@@ -425,9 +448,15 @@ export default function Events({ notify }) {
         );
 
       if (!token) {
-        alert(
-          "Admin token not found. Please login again."
+        setEvents((previous) =>
+          previous.map((event) =>
+            event._id === (modal.event._id || modal.event.id) || event.id === (modal.event._id || modal.event.id)
+              ? { ...event, ...form, id: event.id || event._id, _id: event._id || event.id, name: form.name.trim(), club: form.club, desc: form.desc, date: form.date, venue: form.venue, regCap: Number(form.regCap) || 100, status: form.status }
+              : event
+          )
         );
+        setModal(null);
+        notify?.({ title: "Event updated", subtitle: form.name });
         return;
       }
 
@@ -539,9 +568,9 @@ export default function Events({ notify }) {
         );
 
       if (!token) {
-        alert(
-          "Admin token not found. Please login again."
-        );
+        setEvents((previous) => previous.filter((item) => (item._id || item.id) !== (event._id || event.id)));
+        setDeleteTarget(null);
+        notify?.({ title: "Event deleted", subtitle: event.name });
         return;
       }
 

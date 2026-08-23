@@ -20,34 +20,34 @@ export function formatDate(iso) {
 }
 
 export const inputCls =
-  "w-full rounded-full border border-slate-300 px-3 py-2 text-sm text-slate-800 placeholder:text-slate-400 shadow-[0_1px_3px_rgba(15,23,42,0.12)] focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500";
+  "w-full rounded-full border border-border bg-card px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground shadow-[0_1px_3px_rgba(15,23,42,0.08)] focus:outline-none focus:ring-2 focus:ring-primary/25 focus:border-primary/60";
 
 // Description fields keep a softer, non-circular radius.
 export const textareaCls =
-  "w-full rounded-xl border border-slate-300 px-3 py-2 text-sm text-slate-800 placeholder:text-slate-400 shadow-[0_1px_3px_rgba(15,23,42,0.12)] focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500";
+  "w-full rounded-xl border border-border bg-card px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground shadow-[0_1px_3px_rgba(15,23,42,0.08)] focus:outline-none focus:ring-2 focus:ring-primary/25 focus:border-primary/60";
 
 // Dropdowns share the input's border/shadow treatment but use the same
 // softer, non-circular radius as textareas — a full pill radius reads oddly
 // on a control that opens a multi-item list.
 export const selectCls =
-  "w-full rounded-xl border border-slate-300 bg-white px-3 py-2 pr-9 text-sm text-slate-800 shadow-[0_1px_3px_rgba(15,23,42,0.12)] appearance-none focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500";
+  "w-full rounded-xl border border-border bg-card px-3 py-2 pr-9 text-sm text-foreground shadow-[0_1px_3px_rgba(15,23,42,0.08)] appearance-none focus:outline-none focus:ring-2 focus:ring-primary/25 focus:border-primary/60";
 
 // Card shadow used for stat cards, table containers and list cards — bumped
 // up from the previous near-invisible 5% opacity version.
-export const cardShadowCls = "shadow-[0_2px_10px_rgba(30,64,175,0.10)]";
+export const cardShadowCls = "shadow-[0_12px_30px_-18px_rgba(79,70,229,0.28)]";
 
 // Primary (solid blue) action buttons get a visible tinted shadow instead of
 // relying on Tailwind's neutral shadow-md, which read as flat on white.
 export const primaryBtnShadowCls =
-  "shadow-[0_4px_14px_rgba(37,99,235,0.28)] hover:shadow-[0_6px_18px_rgba(37,99,235,0.38)] transition-shadow";
+  "shadow-[0_4px_14px_rgba(79,70,229,0.28)] hover:shadow-[0_6px_18px_rgba(79,70,229,0.38)] transition-shadow";
 
 // Shared button classes used by every form's footer (Events, Clubs,
 // Placements, Study Materials, Notifications, ConfirmDialog) so every
 // "Cancel" / primary submit button looks identical across the app.
 export const secondaryBtnCls =
-  "px-4 py-2 text-sm font-medium rounded-full text-slate-600 border border-slate-200 shadow-[0_1px_3px_rgba(15,23,42,0.10)] hover:shadow-[0_2px_6px_rgba(15,23,42,0.16)] hover:bg-slate-50 transition-shadow";
+  "px-4 py-2 text-sm font-medium rounded-full text-muted-foreground border border-border bg-card shadow-[0_1px_3px_rgba(15,23,42,0.08)] hover:shadow-[0_2px_6px_rgba(15,23,42,0.16)] hover:bg-accent transition-shadow";
 
-export const primaryBtnCls = `px-4 py-2 text-sm font-medium rounded-full bg-blue-600 text-white hover:bg-blue-700 ${primaryBtnShadowCls}`;
+export const primaryBtnCls = `px-4 py-2 text-sm font-medium rounded-full bg-gradient-brand text-white hover:opacity-95 ${primaryBtnShadowCls}`;
 
 // Converts a stored ISO date (yyyy-mm-dd) to the dd-mm-yyyy string shown in the date field.
 export function isoToDMY(iso) {
