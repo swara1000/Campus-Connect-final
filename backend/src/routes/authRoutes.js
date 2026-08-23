@@ -8,7 +8,12 @@ import {
   forgotPassword,
   verifyOTP,
   resetPassword,
+  updateProfile,
 } from "../controllers/authController.js";
+
+import {
+  protect,
+} from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
@@ -61,6 +66,16 @@ router.post(
 router.post(
   "/reset-password",
   resetPassword
+);
+
+// =====================================================
+// PROFILE
+// =====================================================
+
+router.patch(
+  "/profile",
+  protect,
+  updateProfile
 );
 
 export default router;

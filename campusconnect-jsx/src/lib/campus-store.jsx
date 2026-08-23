@@ -1120,6 +1120,13 @@ export function CampusProvider({ children }) {
 
       signOut,
 
+      updateUser: (patch) =>
+        setUser((current) =>
+          current
+            ? { ...current, ...patch }
+            : current
+        ),
+
       hydrated,
 
       /* NOTIFICATIONS */

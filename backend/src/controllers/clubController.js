@@ -28,6 +28,38 @@ export const getClubs = async (req, res) => {
 };
 
 /* =====================================================
+   GET MY CLUBS - STUDENT
+===================================================== */
+
+export const getMyClubs = async (req, res) => {
+  try {
+    const memberships = await ClubMembership.find({
+      student: req.user._id,
+      status: "joined",
+    })
+      .populate("club")
+      .sort({ createdAt: -1 });
+
+    const clubs = memberships
+      .filter((membership) => membership.club)
+      .map((membership) => membership.club);
+
+    return res.status(200).json({
+      success: true,
+      count: clubs.length,
+      clubs,
+    });
+  } catch (error) {
+    console.error("Get my clubs error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch your clubs",
+    });
+  }
+};
+
+/* =====================================================
    GET ONE CLUB
 ===================================================== */
 

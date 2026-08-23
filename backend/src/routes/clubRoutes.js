@@ -10,6 +10,7 @@ import {
   leaveClub,
   getClubMembershipStatus,
   getClubMembers,
+  getMyClubs,
 } from "../controllers/clubController.js";
 
 import {
@@ -24,6 +25,13 @@ const router = express.Router();
 
 // GET ALL CLUBS
 router.get("/", getClubs);
+
+// GET CLUBS THE CURRENT STUDENT HAS JOINED
+router.get(
+  "/my-memberships",
+  protect,
+  getMyClubs
+);
 
 // GET REAL CLUB MEMBERS - ADMIN
 router.get(

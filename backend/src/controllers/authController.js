@@ -47,6 +47,61 @@ const formatUser = (user) => {
 };
 
 // =====================================================
+// UPDATE PROFILE - STUDENT
+// =====================================================
+
+export const updateProfile = async (req, res) => {
+  try {
+    const {
+      studentId,
+      department,
+      year,
+      bio,
+    } = req.body;
+
+    const user = await User.findById(req.user._id);
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    if (studentId !== undefined) {
+      user.studentId = String(studentId).trim();
+    }
+
+    if (department !== undefined) {
+      user.department = String(department).trim();
+    }
+
+    if (year !== undefined) {
+      user.year = String(year).trim();
+    }
+
+    if (bio !== undefined) {
+      user.bio = String(bio).trim();
+    }
+
+    await user.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Profile updated successfully",
+      user: formatUser(user),
+    });
+  } catch (error) {
+    console.error("Update profile error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to update profile",
+    });
+  }
+};
+
+// =====================================================
 // STUDENT REGISTER
 // =====================================================
 
