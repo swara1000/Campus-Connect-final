@@ -24,6 +24,7 @@ import {
 } from "lucide-react";
 
 import { useCampus } from "@/lib/campus-store";
+import { API_BASE_URL } from "../lib/api-config.js";
 
 export const Route = createFileRoute("/register")({
   component: RegisterPage,
@@ -34,7 +35,7 @@ function RegisterPage() {
   const { signIn } = useCampus();
 
   const googleClientId =
-    "693434437854-pngos0e6dcdsvs9de4j9tp5n3151eh1u.apps.googleusercontent.com";
+    import.meta.env.VITE_GOOGLE_CLIENT_ID || "";
 
   const googleButtonRef = useRef(null);
 
@@ -317,7 +318,7 @@ function RegisterPage() {
       setLoading(true);
 
       const response = await fetch(
-        "http://localhost:5000/api/auth/student/register",
+        `${API_BASE_URL}/api/auth/student/register`,
         {
           method: "POST",
 

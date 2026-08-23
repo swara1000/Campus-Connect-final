@@ -11,16 +11,17 @@ import { io } from "socket.io-client";
 import { toast } from "sonner";
 
 import { currentStudent } from "./campus-data";
+import { API_BASE_URL } from "./api-config.js";
 
 const StoreContext = createContext(null);
 
 const KEY = "campusconnect.state.v1";
 
 const API_URL =
-  "http://localhost:5000/api/notifications";
+  `${API_BASE_URL}/api/notifications`;
 
 const SOCKET_URL =
-  "http://localhost:5000";
+  `${API_BASE_URL}`;
 
 /* =====================================================
    INITIALS

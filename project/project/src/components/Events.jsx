@@ -35,12 +35,13 @@ import {
   secondaryBtnCls,
   primaryBtnCls,
 } from "../utils";
+import { API_BASE_URL } from "../api-config.js";
 
 /* =====================================================
    BACKEND API URL
 ===================================================== */
 
-const API_URL = "http://localhost:5000/api/events";
+const API_URL = `${API_BASE_URL}/api/events`;
 
 /* =====================================================
    EVENT FORM

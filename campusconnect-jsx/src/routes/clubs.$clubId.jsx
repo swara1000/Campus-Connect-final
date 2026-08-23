@@ -31,12 +31,13 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/components/ui/tabs";
+import { API_BASE_URL } from "../lib/api-config.js";
 
 const CLUB_API =
-  "http://localhost:5000/api/clubs";
+  `${API_BASE_URL}/api/clubs`;
 
 const EVENT_API =
-  "http://localhost:5000/api/events";
+  `${API_BASE_URL}/api/events`;
 
 export const Route =
   createFileRoute("/clubs/$clubId")({

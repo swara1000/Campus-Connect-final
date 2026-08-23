@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Eye, EyeOff, GraduationCap, LockKeyhole, ShieldCheck, Users, Zap } from "lucide-react";
 import { inputCls, primaryBtnShadowCls } from "../../utils";
+import { API_BASE_URL } from "../../api-config.js";
 
 export default function AdminLogin() {
   const navigate = useNavigate();
@@ -38,7 +39,7 @@ export default function AdminLogin() {
     try {
       setLoading(true);
 
-      const response = await fetch("http://localhost:5000/api/auth/admin/login", {
+      const response = await fetch(`${API_BASE_URL}/api/auth/admin/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

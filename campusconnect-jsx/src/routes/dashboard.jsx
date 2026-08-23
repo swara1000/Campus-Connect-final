@@ -35,6 +35,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 
 import { useCampus } from "@/lib/campus-store";
+import { API_BASE_URL } from "../lib/api-config.js";
 
 /* =====================================================
    ROUTE
@@ -65,7 +66,7 @@ export const Route = createFileRoute(
 ===================================================== */
 
 const API_URL =
-  "http://localhost:5000/api";
+  `${API_BASE_URL}/api`;
 
 /* =====================================================
    HELPERS

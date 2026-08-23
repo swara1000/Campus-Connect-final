@@ -1,0 +1,58 @@
+services:
+  # Backend API (Express + MongoDB + Socket.io)
+  - type: web
+    name: campusconnect-api
+    env: node
+    rootDir: backend
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: MONGO_URI
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      # Comma-separated list of your deployed frontend/admin URLs
+      - key: ALLOWED_ORIGINS
+        sync: false
+
+  # Main student-facing frontend (TanStack Start, needs a Node server to run SSR)
+  - type: web
+    name: campusconnect-frontend
+    env: node
+    rootDir: campusconnect-jsx
+    plan: free
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    envVars:
+      # Required: this project's Nitro build defaults to a Cloudflare Workers
+      # target, which will not run on Render. Forcing node-server makes it
+      # boot as a normal Node process instead.
+      - key: NITRO_PRESET
+        value: node-server
+      - key: VITE_API_URL
+        sync: false
+      - key: VITE_ADMIN_URL
+        sync: false
+      - key: VITE_GOOGLE_CLIENT_ID
+        sync: false
+
+  # Admin dashboard (static Vite build)
+  - type: web
+    name: campusconnect-admin
+    env: static
+    rootDir: project/project
+    buildCommand: npm install && npm run build
+    staticPublishPath: ./dist
+    envVars:
+      - key: VITE_API_URL
+        sync: false
+    routes:
+      # Required: this is a client-side-routed React app (react-router-dom
+      # BrowserRouter). Without this rewrite, any direct link to a route
+      # like /admin/login 404s on Render's static file server.
+      - type: rewrite
+        source: /*
+        destination: /index.html

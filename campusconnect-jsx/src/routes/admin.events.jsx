@@ -28,6 +28,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { API_BASE_URL } from "../lib/api-config.js";
 
 export const Route = createFileRoute(
   "/admin/events"
@@ -50,7 +51,7 @@ export const Route = createFileRoute(
 });
 
 const API_URL =
-  "http://localhost:5000/api/events";
+  `${API_BASE_URL}/api/events`;
 
 /* =====================================================
    DATE HELPERS

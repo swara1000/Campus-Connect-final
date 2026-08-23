@@ -47,13 +47,14 @@ import {
 } from "@/lib/learning-data";
 
 import { cn } from "@/lib/utils";
+import { API_BASE_URL } from "../lib/api-config.js";
 
 /* =====================================================
    BACKEND API
 ===================================================== */
 
 const API_URL =
-  "http://localhost:5000/api/study-materials";
+  `${API_BASE_URL}/api/study-materials`;
 
 /* =====================================================
    ROUTE

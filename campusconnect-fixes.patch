@@ -1,0 +1,499 @@
+diff -ruN '--exclude=node_modules' '--exclude=.git' orig-final/Campus-Connect-final/backend/.env.example campus-connect-final/Campus-Connect-final/backend/.env.example
+--- orig-final/Campus-Connect-final/backend/.env.example	1970-01-01 00:00:00.000000000 +0000
++++ campus-connect-final/Campus-Connect-final/backend/.env.example	2026-08-23 10:20:54.099399148 +0000
+@@ -0,0 +1,6 @@
++PORT=5000
++MONGO_URI="mongodb+srv://<user>:<password>@<cluster-url>/?retryWrites=true&w=majority"
++JWT_SECRET=
++GEMINI_API_KEY=
++# Comma-separated list of deployed frontend URLs allowed to call this API
++ALLOWED_ORIGINS=
+diff -ruN '--exclude=node_modules' '--exclude=.git' orig-final/Campus-Connect-final/campusconnect-jsx/.env.example campus-connect-final/Campus-Connect-final/campusconnect-jsx/.env.example
+--- orig-final/Campus-Connect-final/campusconnect-jsx/.env.example	1970-01-01 00:00:00.000000000 +0000
++++ campus-connect-final/Campus-Connect-final/campusconnect-jsx/.env.example	2026-08-23 10:20:56.511399291 +0000
+@@ -0,0 +1,3 @@
++VITE_API_URL=http://localhost:5000
++VITE_ADMIN_URL=http://localhost:5174
++VITE_GOOGLE_CLIENT_ID=
+diff -ruN '--exclude=node_modules' '--exclude=.git' orig-final/Campus-Connect-final/campusconnect-jsx/package.json campus-connect-final/Campus-Connect-final/campusconnect-jsx/package.json
+--- orig-final/Campus-Connect-final/campusconnect-jsx/package.json	2026-08-23 10:09:38.000000000 +0000
++++ campus-connect-final/Campus-Connect-final/campusconnect-jsx/package.json	2026-08-23 10:20:44.634938381 +0000
+@@ -8,6 +8,7 @@
+     "build": "vite build",
+     "build:dev": "vite build --mode development",
+     "preview": "vite preview",
++    "start": "node .output/server/index.mjs",
+     "lint": "eslint .",
+     "format": "prettier --write ."
+   },
+diff -ruN '--exclude=node_modules' '--exclude=.git' orig-final/Campus-Connect-final/campusconnect-jsx/src/lib/api-config.js campus-connect-final/Campus-Connect-final/campusconnect-jsx/src/lib/api-config.js
+--- orig-final/Campus-Connect-final/campusconnect-jsx/src/lib/api-config.js	2026-08-23 10:14:59.000000000 +0000
++++ campus-connect-final/Campus-Connect-final/campusconnect-jsx/src/lib/api-config.js	2026-08-23 10:20:32.011397835 +0000
+@@ -0,0 +1,6 @@
++// Backend API base URL.
++// In production, set VITE_API_URL (e.g. https://campusconnect-api.onrender.com)
++// in your hosting provider's environment variables.
++// Falls back to localhost for local development.
++export const API_BASE_URL =
++  import.meta.env.VITE_API_URL || "http://localhost:5000";
+diff -ruN '--exclude=node_modules' '--exclude=.git' orig-final/Campus-Connect-final/campusconnect-jsx/src/lib/campus-store.jsx campus-connect-final/Campus-Connect-final/campusconnect-jsx/src/lib/campus-store.jsx
+--- orig-final/Campus-Connect-final/campusconnect-jsx/src/lib/campus-store.jsx	2026-08-23 10:09:38.000000000 +0000
++++ campus-connect-final/Campus-Connect-final/campusconnect-jsx/src/lib/campus-store.jsx	2026-08-23 10:20:26.727397521 +0000
+@@ -11,16 +11,17 @@
+ import { toast } from "sonner";
+ 
+ import { currentStudent } from "./campus-data";
++import { API_BASE_URL } from "./api-config.js";
+ 
+ const StoreContext = createContext(null);
+ 
+ const KEY = "campusconnect.state.v1";
+ 
+ const API_URL =
+-  "http://localhost:5000/api/notifications";
++  `${API_BASE_URL}/api/notifications`;
+ 
+ const SOCKET_URL =
+-  "http://localhost:5000";
++  `${API_BASE_URL}`;
+ 
+ /* =====================================================
+    INITIALS
+diff -ruN '--exclude=node_modules' '--exclude=.git' orig-final/Campus-Connect-final/campusconnect-jsx/src/routes/admin.events.jsx campus-connect-final/Campus-Connect-final/campusconnect-jsx/src/routes/admin.events.jsx
+--- orig-final/Campus-Connect-final/campusconnect-jsx/src/routes/admin.events.jsx	2026-08-23 10:09:38.000000000 +0000
++++ campus-connect-final/Campus-Connect-final/campusconnect-jsx/src/routes/admin.events.jsx	2026-08-23 10:20:26.736911468 +0000
+@@ -28,6 +28,7 @@
+ import { Input } from "@/components/ui/input";
+ import { Badge } from "@/components/ui/badge";
+ import { Progress } from "@/components/ui/progress";
++import { API_BASE_URL } from "../lib/api-config.js";
+ 
+ export const Route = createFileRoute(
+   "/admin/events"
+@@ -50,7 +51,7 @@
+ });
+ 
+ const API_URL =
+-  "http://localhost:5000/api/events";
++  `${API_BASE_URL}/api/events`;
+ 
+ /* =====================================================
+    DATE HELPERS
+diff -ruN '--exclude=node_modules' '--exclude=.git' orig-final/Campus-Connect-final/campusconnect-jsx/src/routes/assistant.jsx campus-connect-final/Campus-Connect-final/campusconnect-jsx/src/routes/assistant.jsx
+--- orig-final/Campus-Connect-final/campusconnect-jsx/src/routes/assistant.jsx	2026-08-23 10:09:38.000000000 +0000
++++ campus-connect-final/Campus-Connect-final/campusconnect-jsx/src/routes/assistant.jsx	2026-08-23 10:20:26.740352176 +0000
+@@ -17,8 +17,9 @@
+ import { Badge } from "@/components/ui/badge";
+ import { aiHistory, aiSuggestions } from "@/lib/learning-data";
+ import { cn } from "@/lib/utils";
++import { API_BASE_URL } from "../lib/api-config.js";
+ 
+-const API_URL = "http://localhost:5000/api/ai/chat";
++const API_URL = `${API_BASE_URL}/api/ai/chat`;
+ 
+ export const Route = createFileRoute("/assistant")({
+   head: () => ({
+diff -ruN '--exclude=node_modules' '--exclude=.git' orig-final/Campus-Connect-final/campusconnect-jsx/src/routes/chat.jsx campus-connect-final/Campus-Connect-final/campusconnect-jsx/src/routes/chat.jsx
+--- orig-final/Campus-Connect-final/campusconnect-jsx/src/routes/chat.jsx	2026-08-23 10:09:38.000000000 +0000
++++ campus-connect-final/Campus-Connect-final/campusconnect-jsx/src/routes/chat.jsx	2026-08-23 10:20:26.738712919 +0000
+@@ -30,9 +30,10 @@
+ import { Badge } from "@/components/ui/badge";
+ import { useCampus } from "@/lib/campus-store";
+ import { cn } from "@/lib/utils";
++import { API_BASE_URL } from "../lib/api-config.js";
+ 
+-const API_URL = "http://localhost:5000/api/chat";
+-const SOCKET_URL = "http://localhost:5000";
++const API_URL = `${API_BASE_URL}/api/chat`;
++const SOCKET_URL = `${API_BASE_URL}`;
+ 
+ /* =====================================================
+    CREATE SOCKET CONNECTION
+diff -ruN '--exclude=node_modules' '--exclude=.git' orig-final/Campus-Connect-final/campusconnect-jsx/src/routes/clubs.$clubId.jsx campus-connect-final/Campus-Connect-final/campusconnect-jsx/src/routes/clubs.$clubId.jsx
+--- orig-final/Campus-Connect-final/campusconnect-jsx/src/routes/clubs.$clubId.jsx	2026-08-23 10:09:38.000000000 +0000
++++ campus-connect-final/Campus-Connect-final/campusconnect-jsx/src/routes/clubs.$clubId.jsx	2026-08-23 10:20:26.735692713 +0000
+@@ -31,12 +31,13 @@
+   TabsList,
+   TabsTrigger,
+ } from "@/components/ui/tabs";
++import { API_BASE_URL } from "../lib/api-config.js";
+ 
+ const CLUB_API =
+-  "http://localhost:5000/api/clubs";
++  `${API_BASE_URL}/api/clubs`;
+ 
+ const EVENT_API =
+-  "http://localhost:5000/api/events";
++  `${API_BASE_URL}/api/events`;
+ 
+ export const Route =
+   createFileRoute("/clubs/$clubId")({
+diff -ruN '--exclude=node_modules' '--exclude=.git' orig-final/Campus-Connect-final/campusconnect-jsx/src/routes/dashboard.jsx campus-connect-final/Campus-Connect-final/campusconnect-jsx/src/routes/dashboard.jsx
+--- orig-final/Campus-Connect-final/campusconnect-jsx/src/routes/dashboard.jsx	2026-08-23 10:09:38.000000000 +0000
++++ campus-connect-final/Campus-Connect-final/campusconnect-jsx/src/routes/dashboard.jsx	2026-08-23 10:20:26.737704363 +0000
+@@ -35,6 +35,7 @@
+ import { Badge } from "@/components/ui/badge";
+ 
+ import { useCampus } from "@/lib/campus-store";
++import { API_BASE_URL } from "../lib/api-config.js";
+ 
+ /* =====================================================
+    ROUTE
+@@ -65,7 +66,7 @@
+ ===================================================== */
+ 
+ const API_URL =
+-  "http://localhost:5000/api";
++  `${API_BASE_URL}/api`;
+ 
+ /* =====================================================
+    HELPERS
+diff -ruN '--exclude=node_modules' '--exclude=.git' orig-final/Campus-Connect-final/campusconnect-jsx/src/routes/events.index.jsx campus-connect-final/Campus-Connect-final/campusconnect-jsx/src/routes/events.index.jsx
+--- orig-final/Campus-Connect-final/campusconnect-jsx/src/routes/events.index.jsx	2026-08-23 10:09:38.000000000 +0000
++++ campus-connect-final/Campus-Connect-final/campusconnect-jsx/src/routes/events.index.jsx	2026-08-23 10:20:26.739932348 +0000
+@@ -10,6 +10,7 @@
+ 
+ import { useCampus } from "@/lib/campus-store";
+ import { cn } from "@/lib/utils";
++import { API_BASE_URL } from "../lib/api-config.js";
+ 
+ export const Route = createFileRoute("/events/")({
+   head: () => ({
+@@ -35,7 +36,7 @@
+   component: EventsPage,
+ });
+ 
+-const API_URL = "http://localhost:5000/api/events";
++const API_URL = `${API_BASE_URL}/api/events`;
+ 
+ const categories = [
+   "All",
+diff -ruN '--exclude=node_modules' '--exclude=.git' orig-final/Campus-Connect-final/campusconnect-jsx/src/routes/forgot-password.jsx campus-connect-final/Campus-Connect-final/campusconnect-jsx/src/routes/forgot-password.jsx
+--- orig-final/Campus-Connect-final/campusconnect-jsx/src/routes/forgot-password.jsx	2026-08-23 10:09:38.000000000 +0000
++++ campus-connect-final/Campus-Connect-final/campusconnect-jsx/src/routes/forgot-password.jsx	2026-08-23 10:20:26.739472564 +0000
+@@ -14,6 +14,7 @@
+   EyeOff,
+   CheckCircle,
+ } from "lucide-react";
++import { API_BASE_URL } from "../lib/api-config.js";
+ 
+ export const Route = createFileRoute("/forgot-password")({
+   component: ForgotPasswordPage,
+@@ -134,7 +135,7 @@
+       setLoading(true);
+ 
+       const response = await fetch(
+-        "http://localhost:5000/api/auth/forgot-password",
++        `${API_BASE_URL}/api/auth/forgot-password`,
+         {
+           method: "POST",
+ 
+@@ -220,7 +221,7 @@
+       setLoading(true);
+ 
+       const response = await fetch(
+-        "http://localhost:5000/api/auth/verify-otp",
++        `${API_BASE_URL}/api/auth/verify-otp`,
+         {
+           method: "POST",
+ 
+@@ -333,7 +334,7 @@
+       setLoading(true);
+ 
+       const response = await fetch(
+-        "http://localhost:5000/api/auth/reset-password",
++        `${API_BASE_URL}/api/auth/reset-password`,
+         {
+           method: "POST",
+ 
+@@ -394,7 +395,7 @@
+       setLoading(true);
+ 
+       const response = await fetch(
+-        "http://localhost:5000/api/auth/forgot-password",
++        `${API_BASE_URL}/api/auth/forgot-password`,
+         {
+           method: "POST",
+ 
+diff -ruN '--exclude=node_modules' '--exclude=.git' orig-final/Campus-Connect-final/campusconnect-jsx/src/routes/login.jsx campus-connect-final/Campus-Connect-final/campusconnect-jsx/src/routes/login.jsx
+--- orig-final/Campus-Connect-final/campusconnect-jsx/src/routes/login.jsx	2026-08-23 10:09:38.000000000 +0000
++++ campus-connect-final/Campus-Connect-final/campusconnect-jsx/src/routes/login.jsx	2026-08-23 10:20:39.856607830 +0000
+@@ -22,6 +22,7 @@
+ } from "lucide-react";
+ 
+ import { useCampus } from "@/lib/campus-store";
++import { API_BASE_URL } from "../lib/api-config.js";
+ 
+ export const Route = createFileRoute("/login")({
+   component: LoginPage,
+@@ -38,7 +39,7 @@
+   ===================================================== */
+ 
+   const googleClientId =
+-    "693434437854-pngos0e6dcdsvs9de4j9tp5n3151eh1u.apps.googleusercontent.com";
++    import.meta.env.VITE_GOOGLE_CLIENT_ID || "";
+ 
+   const googleButtonRef = useRef(null);
+ 
+@@ -148,7 +149,7 @@
+ 
+     const responseFromBackend =
+       await fetch(
+-        "http://localhost:5000/api/auth/google",
++        `${API_BASE_URL}/api/auth/google`,
+         {
+           method: "POST",
+ 
+@@ -492,7 +493,7 @@
+ 
+   try {
+     const response = await fetch(
+-      "http://localhost:5000/api/auth/student/login",
++      `${API_BASE_URL}/api/auth/student/login`,
+       {
+         method: "POST",
+ 
+diff -ruN '--exclude=node_modules' '--exclude=.git' orig-final/Campus-Connect-final/campusconnect-jsx/src/routes/materials.jsx campus-connect-final/Campus-Connect-final/campusconnect-jsx/src/routes/materials.jsx
+--- orig-final/Campus-Connect-final/campusconnect-jsx/src/routes/materials.jsx	2026-08-23 10:09:38.000000000 +0000
++++ campus-connect-final/Campus-Connect-final/campusconnect-jsx/src/routes/materials.jsx	2026-08-23 10:20:26.738191032 +0000
+@@ -47,13 +47,14 @@
+ } from "@/lib/learning-data";
+ 
+ import { cn } from "@/lib/utils";
++import { API_BASE_URL } from "../lib/api-config.js";
+ 
+ /* =====================================================
+    BACKEND API
+ ===================================================== */
+ 
+ const API_URL =
+-  "http://localhost:5000/api/study-materials";
++  `${API_BASE_URL}/api/study-materials`;
+ 
+ /* =====================================================
+    ROUTE
+diff -ruN '--exclude=node_modules' '--exclude=.git' orig-final/Campus-Connect-final/campusconnect-jsx/src/routes/peer-learning.jsx campus-connect-final/Campus-Connect-final/campusconnect-jsx/src/routes/peer-learning.jsx
+--- orig-final/Campus-Connect-final/campusconnect-jsx/src/routes/peer-learning.jsx	2026-08-23 10:09:38.000000000 +0000
++++ campus-connect-final/Campus-Connect-final/campusconnect-jsx/src/routes/peer-learning.jsx	2026-08-23 10:20:26.736163358 +0000
+@@ -46,12 +46,13 @@
+ import { useCampus } from "@/lib/campus-store";
+ import { subjects } from "@/lib/learning-data";
+ import { cn } from "@/lib/utils";
++import { API_BASE_URL } from "../lib/api-config.js";
+ 
+ const API_URL =
+-  "http://localhost:5000/api/peer-learning";
++  `${API_BASE_URL}/api/peer-learning`;
+ 
+ const CHAT_API_URL =
+-  "http://localhost:5000/api/chat";
++  `${API_BASE_URL}/api/chat`;
+ 
+ export const Route =
+   createFileRoute("/peer-learning")({
+diff -ruN '--exclude=node_modules' '--exclude=.git' orig-final/Campus-Connect-final/campusconnect-jsx/src/routes/register.jsx campus-connect-final/Campus-Connect-final/campusconnect-jsx/src/routes/register.jsx
+--- orig-final/Campus-Connect-final/campusconnect-jsx/src/routes/register.jsx	2026-08-23 10:09:38.000000000 +0000
++++ campus-connect-final/Campus-Connect-final/campusconnect-jsx/src/routes/register.jsx	2026-08-23 10:20:39.856846128 +0000
+@@ -24,6 +24,7 @@
+ } from "lucide-react";
+ 
+ import { useCampus } from "@/lib/campus-store";
++import { API_BASE_URL } from "../lib/api-config.js";
+ 
+ export const Route = createFileRoute("/register")({
+   component: RegisterPage,
+@@ -34,7 +35,7 @@
+   const { signIn } = useCampus();
+ 
+   const googleClientId =
+-    "693434437854-pngos0e6dcdsvs9de4j9tp5n3151eh1u.apps.googleusercontent.com";
++    import.meta.env.VITE_GOOGLE_CLIENT_ID || "";
+ 
+   const googleButtonRef = useRef(null);
+ 
+@@ -317,7 +318,7 @@
+       setLoading(true);
+ 
+       const response = await fetch(
+-        "http://localhost:5000/api/auth/student/register",
++        `${API_BASE_URL}/api/auth/student/register`,
+         {
+           method: "POST",
+ 
+diff -ruN '--exclude=node_modules' '--exclude=.git' orig-final/Campus-Connect-final/project/project/.env.example campus-connect-final/Campus-Connect-final/project/project/.env.example
+--- orig-final/Campus-Connect-final/project/project/.env.example	1970-01-01 00:00:00.000000000 +0000
++++ campus-connect-final/Campus-Connect-final/project/project/.env.example	2026-08-23 10:20:58.999399439 +0000
+@@ -0,0 +1 @@
++VITE_API_URL=http://localhost:5000
+diff -ruN '--exclude=node_modules' '--exclude=.git' orig-final/Campus-Connect-final/project/project/src/api-config.js campus-connect-final/Campus-Connect-final/project/project/src/api-config.js
+--- orig-final/Campus-Connect-final/project/project/src/api-config.js	1970-01-01 00:00:00.000000000 +0000
++++ campus-connect-final/Campus-Connect-final/project/project/src/api-config.js	2026-08-23 10:20:32.011397835 +0000
+@@ -0,0 +1,6 @@
++// Backend API base URL.
++// In production, set VITE_API_URL (e.g. https://campusconnect-api.onrender.com)
++// in your hosting provider's environment variables.
++// Falls back to localhost for local development.
++export const API_BASE_URL =
++  import.meta.env.VITE_API_URL || "http://localhost:5000";
+diff -ruN '--exclude=node_modules' '--exclude=.git' orig-final/Campus-Connect-final/project/project/src/components/Clubs.jsx campus-connect-final/Campus-Connect-final/project/project/src/components/Clubs.jsx
+--- orig-final/Campus-Connect-final/project/project/src/components/Clubs.jsx	2026-08-23 10:09:38.000000000 +0000
++++ campus-connect-final/Campus-Connect-final/project/project/src/components/Clubs.jsx	2026-08-23 10:20:26.741859798 +0000
+@@ -36,9 +36,10 @@
+   secondaryBtnCls,
+   primaryBtnCls,
+ } from "../utils";
++import { API_BASE_URL } from "../api-config.js";
+ 
+ const API_URL =
+-  "http://localhost:5000/api/clubs";
++  `${API_BASE_URL}/api/clubs`;
+ 
+ /* =====================================================
+    COORDINATOR FORM
+diff -ruN '--exclude=node_modules' '--exclude=.git' orig-final/Campus-Connect-final/project/project/src/components/Events.jsx campus-connect-final/Campus-Connect-final/project/project/src/components/Events.jsx
+--- orig-final/Campus-Connect-final/project/project/src/components/Events.jsx	2026-08-23 10:09:38.000000000 +0000
++++ campus-connect-final/Campus-Connect-final/project/project/src/components/Events.jsx	2026-08-23 10:20:26.742444410 +0000
+@@ -35,12 +35,13 @@
+   secondaryBtnCls,
+   primaryBtnCls,
+ } from "../utils";
++import { API_BASE_URL } from "../api-config.js";
+ 
+ /* =====================================================
+    BACKEND API URL
+ ===================================================== */
+ 
+-const API_URL = "http://localhost:5000/api/events";
++const API_URL = `${API_BASE_URL}/api/events`;
+ 
+ /* =====================================================
+    EVENT FORM
+diff -ruN '--exclude=node_modules' '--exclude=.git' orig-final/Campus-Connect-final/project/project/src/components/LearningRequests.jsx campus-connect-final/Campus-Connect-final/project/project/src/components/LearningRequests.jsx
+--- orig-final/Campus-Connect-final/project/project/src/components/LearningRequests.jsx	2026-08-23 10:09:38.000000000 +0000
++++ campus-connect-final/Campus-Connect-final/project/project/src/components/LearningRequests.jsx	2026-08-23 10:20:26.740838578 +0000
+@@ -27,13 +27,14 @@
+   cardShadowCls,
+   AVATAR_COLORS,
+ } from "../utils";
++import { API_BASE_URL } from "../api-config.js";
+ 
+ /* =====================================================
+    BACKEND API
+ ===================================================== */
+ 
+ const API_URL =
+-  "http://localhost:5000/api/peer-learning";
++  `${API_BASE_URL}/api/peer-learning`;
+ 
+ const STATIC_REQUESTS = [
+   {
+diff -ruN '--exclude=node_modules' '--exclude=.git' orig-final/Campus-Connect-final/project/project/src/components/StudyMaterials.jsx campus-connect-final/Campus-Connect-final/project/project/src/components/StudyMaterials.jsx
+--- orig-final/Campus-Connect-final/project/project/src/components/StudyMaterials.jsx	2026-08-23 10:09:38.000000000 +0000
++++ campus-connect-final/Campus-Connect-final/project/project/src/components/StudyMaterials.jsx	2026-08-23 10:20:26.741324431 +0000
+@@ -28,8 +28,9 @@
+   secondaryBtnCls,
+   primaryBtnCls,
+ } from "../utils";
++import { API_BASE_URL } from "../api-config.js";
+ 
+-const API_URL = "http://localhost:5000/api/study-materials";
++const API_URL = `${API_BASE_URL}/api/study-materials`;
+ 
+ /* =====================================================
+    MATERIAL FORM
+diff -ruN '--exclude=node_modules' '--exclude=.git' orig-final/Campus-Connect-final/project/project/src/pages/AdminAuth/AdminLogin.jsx campus-connect-final/Campus-Connect-final/project/project/src/pages/AdminAuth/AdminLogin.jsx
+--- orig-final/Campus-Connect-final/project/project/src/pages/AdminAuth/AdminLogin.jsx	2026-08-23 10:09:38.000000000 +0000
++++ campus-connect-final/Campus-Connect-final/project/project/src/pages/AdminAuth/AdminLogin.jsx	2026-08-23 10:20:26.742810265 +0000
+@@ -2,6 +2,7 @@
+ import { useNavigate } from "react-router-dom";
+ import { Eye, EyeOff, GraduationCap, LockKeyhole, ShieldCheck, Users, Zap } from "lucide-react";
+ import { inputCls, primaryBtnShadowCls } from "../../utils";
++import { API_BASE_URL } from "../../api-config.js";
+ 
+ export default function AdminLogin() {
+   const navigate = useNavigate();
+@@ -38,7 +39,7 @@
+     try {
+       setLoading(true);
+ 
+-      const response = await fetch("http://localhost:5000/api/auth/admin/login", {
++      const response = await fetch(`${API_BASE_URL}/api/auth/admin/login`, {
+         method: "POST",
+         headers: {
+           "Content-Type": "application/json",
+diff -ruN '--exclude=node_modules' '--exclude=.git' orig-final/Campus-Connect-final/project/project/src/pages/StudentManagement.jsx campus-connect-final/Campus-Connect-final/project/project/src/pages/StudentManagement.jsx
+--- orig-final/Campus-Connect-final/project/project/src/pages/StudentManagement.jsx	2026-08-23 10:09:38.000000000 +0000
++++ campus-connect-final/Campus-Connect-final/project/project/src/pages/StudentManagement.jsx	2026-08-23 10:20:26.743226116 +0000
+@@ -14,8 +14,9 @@
+   Trash2,
+   X,
+ } from "lucide-react";
++import { API_BASE_URL } from "../api-config.js";
+ 
+-const API_URL = "http://localhost:5000/api";
++const API_URL = `${API_BASE_URL}/api`;
+ 
+ function StudentManagement() {
+   const [search, setSearch] = useState("");
+diff -ruN '--exclude=node_modules' '--exclude=.git' orig-final/Campus-Connect-final/render.yaml campus-connect-final/Campus-Connect-final/render.yaml
+--- orig-final/Campus-Connect-final/render.yaml	1970-01-01 00:00:00.000000000 +0000
++++ campus-connect-final/Campus-Connect-final/render.yaml	2026-08-23 10:20:51.543398996 +0000
+@@ -0,0 +1,58 @@
++services:
++  # Backend API (Express + MongoDB + Socket.io)
++  - type: web
++    name: campusconnect-api
++    env: node
++    rootDir: backend
++    plan: free
++    buildCommand: npm install
++    startCommand: npm start
++    envVars:
++      - key: MONGO_URI
++        sync: false
++      - key: JWT_SECRET
++        sync: false
++      - key: GEMINI_API_KEY
++        sync: false
++      # Comma-separated list of your deployed frontend/admin URLs
++      - key: ALLOWED_ORIGINS
++        sync: false
++
++  # Main student-facing frontend (TanStack Start, needs a Node server to run SSR)
++  - type: web
++    name: campusconnect-frontend
++    env: node
++    rootDir: campusconnect-jsx
++    plan: free
++    buildCommand: npm install && npm run build
++    startCommand: npm start
++    envVars:
++      # Required: this project's Nitro build defaults to a Cloudflare Workers
++      # target, which will not run on Render. Forcing node-server makes it
++      # boot as a normal Node process instead.
++      - key: NITRO_PRESET
++        value: node-server
++      - key: VITE_API_URL
++        sync: false
++      - key: VITE_ADMIN_URL
++        sync: false
++      - key: VITE_GOOGLE_CLIENT_ID
++        sync: false
++
++  # Admin dashboard (static Vite build)
++  - type: web
++    name: campusconnect-admin
++    env: static
++    rootDir: project/project
++    buildCommand: npm install && npm run build
++    staticPublishPath: ./dist
++    envVars:
++      - key: VITE_API_URL
++        sync: false
++    routes:
++      # Required: this is a client-side-routed React app (react-router-dom
++      # BrowserRouter). Without this rewrite, any direct link to a route
++      # like /admin/login 404s on Render's static file server.
++      - type: rewrite
++        source: /*
++        destination: /index.html

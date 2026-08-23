@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 
 import { useCampus } from "@/lib/campus-store";
+import { API_BASE_URL } from "../lib/api-config.js";
 
 export const Route = createFileRoute("/login")({
   component: LoginPage,
@@ -38,7 +39,7 @@ function LoginPage() {
   ===================================================== */
 
   const googleClientId =
-    "693434437854-pngos0e6dcdsvs9de4j9tp5n3151eh1u.apps.googleusercontent.com";
+    import.meta.env.VITE_GOOGLE_CLIENT_ID || "";
 
   const googleButtonRef = useRef(null);
 
@@ -148,7 +149,7 @@ function LoginPage() {
 
     const responseFromBackend =
       await fetch(
-        "http://localhost:5000/api/auth/google",
+        `${API_BASE_URL}/api/auth/google`,
         {
           method: "POST",
 
@@ -492,7 +493,7 @@ function LoginPage() {
 
   try {
     const response = await fetch(
-      "http://localhost:5000/api/auth/student/login",
+      `${API_BASE_URL}/api/auth/student/login`,
       {
         method: "POST",
 

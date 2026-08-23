@@ -27,13 +27,14 @@ import {
   cardShadowCls,
   AVATAR_COLORS,
 } from "../utils";
+import { API_BASE_URL } from "../api-config.js";
 
 /* =====================================================
    BACKEND API
 ===================================================== */
 
 const API_URL =
-  "http://localhost:5000/api/peer-learning";
+  `${API_BASE_URL}/api/peer-learning`;
 
 const STATIC_REQUESTS = [
   {

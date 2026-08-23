@@ -17,8 +17,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { aiHistory, aiSuggestions } from "@/lib/learning-data";
 import { cn } from "@/lib/utils";
+import { API_BASE_URL } from "../lib/api-config.js";
 
-const API_URL = "http://localhost:5000/api/ai/chat";
+const API_URL = `${API_BASE_URL}/api/ai/chat`;
 
 export const Route = createFileRoute("/assistant")({
   head: () => ({

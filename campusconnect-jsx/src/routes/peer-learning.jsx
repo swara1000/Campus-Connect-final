@@ -46,12 +46,13 @@ import {
 import { useCampus } from "@/lib/campus-store";
 import { subjects } from "@/lib/learning-data";
 import { cn } from "@/lib/utils";
+import { API_BASE_URL } from "../lib/api-config.js";
 
 const API_URL =
-  "http://localhost:5000/api/peer-learning";
+  `${API_BASE_URL}/api/peer-learning`;
 
 const CHAT_API_URL =
-  "http://localhost:5000/api/chat";
+  `${API_BASE_URL}/api/chat`;
 
 export const Route =
   createFileRoute("/peer-learning")({

@@ -10,6 +10,7 @@ import { Progress } from "@/components/ui/progress";
 
 import { useCampus } from "@/lib/campus-store";
 import { cn } from "@/lib/utils";
+import { API_BASE_URL } from "../lib/api-config.js";
 
 export const Route = createFileRoute("/events/")({
   head: () => ({
@@ -35,7 +36,7 @@ export const Route = createFileRoute("/events/")({
   component: EventsPage,
 });
 
-const API_URL = "http://localhost:5000/api/events";
+const API_URL = `${API_BASE_URL}/api/events`;
 
 const categories = [
   "All",

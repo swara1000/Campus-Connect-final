@@ -22,22 +22,16 @@ const httpServer = http.createServer(app);
 /* =====================================================
    SOCKET.IO
 ===================================================== */
+const defaultSocketOrigins = [
+  "http://localhost:5173", "http://localhost:5174", "http://localhost:5175",
+  "http://localhost:5176", "http://localhost:8080", "http://localhost:8081",
+];
+const envSocketOrigins = process.env.ALLOWED_ORIGINS
+  ? process.env.ALLOWED_ORIGINS.split(",").map((o) => o.trim())
+  : [];
 
 const io = new Server(httpServer, {
-  cors: {
-    origin: [
-      "http://localhost:5173",
-      "http://localhost:5174",
-      "http://localhost:5175",
-      "http://localhost:5176",
-      "http://localhost:8080",
-      "http://localhost:8081",
-    ],
-
-    methods: ["GET", "POST"],
-
-    credentials: true,
-  },
+  cors: { origin: [...defaultSocketOrigins, ...envSocketOrigins], methods: ["GET", "POST"], credentials: true },
 });
 
 /* =====================================================

@@ -30,9 +30,10 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { useCampus } from "@/lib/campus-store";
 import { cn } from "@/lib/utils";
+import { API_BASE_URL } from "../lib/api-config.js";
 
-const API_URL = "http://localhost:5000/api/chat";
-const SOCKET_URL = "http://localhost:5000";
+const API_URL = `${API_BASE_URL}/api/chat`;
+const SOCKET_URL = `${API_BASE_URL}`;
 
 /* =====================================================
    CREATE SOCKET CONNECTION

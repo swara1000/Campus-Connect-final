@@ -36,9 +36,10 @@ import {
   secondaryBtnCls,
   primaryBtnCls,
 } from "../utils";
+import { API_BASE_URL } from "../api-config.js";
 
 const API_URL =
-  "http://localhost:5000/api/clubs";
+  `${API_BASE_URL}/api/clubs`;
 
 /* =====================================================
    COORDINATOR FORM
