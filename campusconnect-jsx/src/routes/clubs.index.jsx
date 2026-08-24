@@ -20,8 +20,6 @@ import { Button } from "@/components/ui/button";
 
 import { Badge } from "@/components/ui/badge";
 
-import { useCampus } from "@/lib/campus-store";
-
 import { cn } from "@/lib/utils";
 
 import { API_BASE_URL } from "../lib/api-config.js";
@@ -98,11 +96,6 @@ const cats = [
 ===================================================== */
 
 function ClubsPage() {
-  const {
-    joinedClubs,
-    toggleClub,
-  } = useCampus();
-
   const [q, setQ] =
     useState("");
 
@@ -111,6 +104,12 @@ function ClubsPage() {
 
   const [clubs, setClubs] =
     useState([]);
+
+  const [joinedIds, setJoinedIds] =
+    useState([]);
+
+  const [joiningId, setJoiningId] =
+    useState(null);
 
   const [loading, setLoading] =
     useState(true);
@@ -122,42 +121,161 @@ function ClubsPage() {
      FETCH CLUBS
   ===================================================== */
 
-  useEffect(() => {
-    const fetchClubs = async () => {
-      try {
-        setLoading(true);
-        setError("");
+  const fetchClubs = async () => {
+    try {
+      setLoading(true);
+      setError("");
 
-        const response = await fetch(CLUB_API);
-        const data = await response.json();
+      const response = await fetch(CLUB_API);
+      const data = await response.json();
 
-        if (!response.ok) {
-          setError(data.message || "Failed to load clubs.");
-          return;
-        }
-
-        const formattedClubs = (data.clubs || []).map((club) => ({
-          id: club._id,
-          name: club.name,
-          category: club.category || "General",
-          members: club.membersCount || 0,
-          lead: club.president || "Not assigned",
-          blurb: club.description || "Campus student club",
-          status: club.status || "Active",
-          emoji: getClubEmoji(club.category),
-        }));
-
-        setClubs(formattedClubs);
-      } catch (err) {
-        console.error("Clubs fetch error:", err);
-        setError("Cannot connect to backend. Make sure backend is running.");
-      } finally {
-        setLoading(false);
+      if (!response.ok) {
+        setError(data.message || "Failed to load clubs.");
+        return;
       }
-    };
 
+      const formattedClubs = (data.clubs || []).map((club) => ({
+        id: club._id,
+        name: club.name,
+        category: club.category || "General",
+        members: club.membersCount || 0,
+        lead: club.president || "Not assigned",
+        blurb: club.description || "Campus student club",
+        status: club.status || "Active",
+        emoji: getClubEmoji(club.category),
+      }));
+
+      setClubs(formattedClubs);
+    } catch (err) {
+      console.error("Clubs fetch error:", err);
+      setError("Cannot connect to backend. Make sure backend is running.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  /* =====================================================
+     FETCH THE CLUBS THE CURRENT STUDENT HAS JOINED
+  ===================================================== */
+
+  const fetchMyMemberships = async () => {
+    try {
+      const token = localStorage.getItem("campusconnect_token");
+
+      if (!token) return;
+
+      const response = await fetch(`${CLUB_API}/my-memberships`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setJoinedIds((data.clubs || []).map((club) => club._id));
+      }
+    } catch (err) {
+      console.error("My memberships fetch error:", err);
+    }
+  };
+
+  useEffect(() => {
     fetchClubs();
+    fetchMyMemberships();
   }, []);
+
+  /* =====================================================
+     JOIN / LEAVE CLUB
+  ===================================================== */
+
+  const handleJoinClub = async (club) => {
+    const token = localStorage.getItem("campusconnect_token");
+
+    if (!token) {
+      toast.error("Please login to join clubs.");
+      return;
+    }
+
+    try {
+      setJoiningId(club.id);
+
+      const response = await fetch(`${CLUB_API}/${club.id}/join`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        toast.error(data.message || "Unable to join club");
+        return;
+      }
+
+      setJoinedIds((prev) => [...prev, club.id]);
+
+      setClubs((prev) =>
+        prev.map((item) =>
+          item.id === club.id
+            ? { ...item, members: data.membersCount ?? item.members + 1 }
+            : item
+        )
+      );
+
+      toast.success(`Joined ${club.name}`);
+    } catch (err) {
+      console.error("Join club error:", err);
+      toast.error("Cannot connect to backend.");
+    } finally {
+      setJoiningId(null);
+    }
+  };
+
+  const handleLeaveClub = async (club) => {
+    const token = localStorage.getItem("campusconnect_token");
+
+    if (!token) {
+      toast.error("Please login to leave clubs.");
+      return;
+    }
+
+    try {
+      setJoiningId(club.id);
+
+      const response = await fetch(`${CLUB_API}/${club.id}/join`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        toast.error(data.message || "Unable to leave club");
+        return;
+      }
+
+      setJoinedIds((prev) => prev.filter((id) => id !== club.id));
+
+      setClubs((prev) =>
+        prev.map((item) =>
+          item.id === club.id
+            ? { ...item, members: data.membersCount ?? Math.max(0, item.members - 1) }
+            : item
+        )
+      );
+
+      toast.success(`Left ${club.name}`);
+    } catch (err) {
+      console.error("Leave club error:", err);
+      toast.error("Cannot connect to backend.");
+    } finally {
+      setJoiningId(null);
+    }
+  };
 
   /* =====================================================
      FILTER CLUBS
@@ -295,9 +413,12 @@ function ClubsPage() {
           {list.map((club) => {
 
             const joined =
-              joinedClubs.includes(
+              joinedIds.includes(
                 club.id
               );
+
+            const isBusy =
+              joiningId === club.id;
 
             return (
               <GlassCard
@@ -444,6 +565,7 @@ function ClubsPage() {
                   {joined ? (
                     <Button
                       type="button"
+                      disabled={isBusy}
                       className="
                         w-full
                         rounded-xl
@@ -458,38 +580,27 @@ function ClubsPage() {
 
                         focus-visible:ring-red-500
                       "
-                      onClick={() => {
-                        toggleClub(
-                          club.id
-                        );
-
-                        toast.success(
-                          `Left ${club.name}`
-                        );
-                      }}
+                      onClick={() =>
+                        handleLeaveClub(club)
+                      }
                     >
                       <LogOut className="mr-2 size-4" />
 
-                      Leave
+                      {isBusy ? "Leaving..." : "Leave"}
                     </Button>
                   ) : (
                     <Button
                       type="button"
+                      disabled={isBusy}
                       className="
                         w-full
                         rounded-xl
                       "
-                      onClick={() => {
-                        toggleClub(
-                          club.id
-                        );
-
-                        toast.success(
-                          `Joined ${club.name}`
-                        );
-                      }}
+                      onClick={() =>
+                        handleJoinClub(club)
+                      }
                     >
-                      Join
+                      {isBusy ? "Joining..." : "Join"}
                     </Button>
                   )}
 
