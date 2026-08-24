@@ -1,6 +1,12 @@
 import mongoose from "mongoose";
+
 import Event from "../models/Event.js";
 import User from "../models/User.js";
+import {
+  getEventStatus,
+  withDerivedEventStatus,
+  withDerivedEventStatuses,
+} from "../utils/eventStatus.js";
 import Notification from "../models/Notification.js";
 import EventRegistration from "../models/EventRegistration.js";
 
@@ -16,7 +22,7 @@ export const getEvents = async (req, res) => {
 
     return res.status(200).json({
       success: true,
-      events,
+      events: withDerivedEventStatuses(events),
     });
   } catch (error) {
     console.error("Get events error:", error);
@@ -45,7 +51,7 @@ export const getEventById = async (req, res) => {
 
     return res.status(200).json({
       success: true,
-      event,
+      event: withDerivedEventStatus(event),
     });
   } catch (error) {
     console.error("Get event error:", error);
@@ -70,7 +76,6 @@ export const createEvent = async (req, res) => {
       date,
       venue,
       regCap,
-      status,
     } = req.body;
 
     // -----------------------------------------------
@@ -85,32 +90,13 @@ export const createEvent = async (req, res) => {
     }
 
     // -----------------------------------------------
-    // 2. Prevent past event dates
+    // 2. Validate the calendar date
     // -----------------------------------------------
 
-    const today = new Date();
-
-    // Remove current time
-    today.setHours(0, 0, 0, 0);
-
-    const eventDate = new Date(date);
-
-    // Check invalid date
-    if (isNaN(eventDate.getTime())) {
+    if (isNaN(new Date(date).getTime())) {
       return res.status(400).json({
         success: false,
         message: "Invalid event date",
-      });
-    }
-
-    // Remove event time
-    eventDate.setHours(0, 0, 0, 0);
-
-    // Reject dates before today
-    if (eventDate < today) {
-      return res.status(400).json({
-        success: false,
-        message: "Event date cannot be in the past.",
       });
     }
 
@@ -125,7 +111,6 @@ export const createEvent = async (req, res) => {
       date,
       venue,
       regCap: Number(regCap) || 100,
-      status: status || "Upcoming",
       regCount: 0,
       createdBy: req.user?._id,
     });
@@ -210,7 +195,7 @@ export const createEvent = async (req, res) => {
       message:
         "Event created and notifications sent",
 
-      event,
+      event: withDerivedEventStatus(event),
     });
 
   } catch (error) {
@@ -232,36 +217,20 @@ export const createEvent = async (req, res) => {
 
 export const updateEvent = async (req, res) => {
   try {
+    const updates = { ...req.body };
+
+    // Status is derived from the event date and cannot be set manually.
+    delete updates.status;
+
     // -----------------------------------------------
     // 1. Validate date if date is being updated
     // -----------------------------------------------
 
-    if (req.body.date) {
-      const today = new Date();
-
-      // Remove current time
-      today.setHours(0, 0, 0, 0);
-
-      const eventDate = new Date(req.body.date);
-
-      // Check invalid date
-      if (isNaN(eventDate.getTime())) {
-        return res.status(400).json({
-          success: false,
-          message: "Invalid event date",
-        });
-      }
-
-      // Remove event time
-      eventDate.setHours(0, 0, 0, 0);
-
-      // Reject past date
-      if (eventDate < today) {
-        return res.status(400).json({
-          success: false,
-          message: "Event date cannot be in the past.",
-        });
-      }
+    if (updates.date && isNaN(new Date(updates.date).getTime())) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid event date",
+      });
     }
 
     // -----------------------------------------------
@@ -271,7 +240,7 @@ export const updateEvent = async (req, res) => {
     const event =
       await Event.findByIdAndUpdate(
         req.params.id,
-        req.body,
+        updates,
         {
           new: true,
           runValidators: true,
@@ -296,7 +265,7 @@ export const updateEvent = async (req, res) => {
     return res.status(200).json({
       success: true,
       message: "Event updated successfully",
-      event,
+      event: withDerivedEventStatus(event),
     });
 
   } catch (error) {
@@ -392,6 +361,13 @@ export const registerForEvent = async (req, res) => {
       return res.status(404).json({
         success: false,
         message: "Event not found",
+      });
+    }
+
+    if (getEventStatus(event.date) === "Completed") {
+      return res.status(400).json({
+        success: false,
+        message: "This event has already ended",
       });
     }
 
@@ -552,9 +528,11 @@ export const getMyRegisteredEvents = async (req, res) => {
       .populate("event")
       .sort({ createdAt: -1 });
 
-    const events = registrations
-      .filter((registration) => registration.event)
-      .map((registration) => registration.event);
+    const events = withDerivedEventStatuses(
+      registrations
+        .filter((registration) => registration.event)
+        .map((registration) => registration.event)
+    );
 
     return res.status(200).json({
       success: true,

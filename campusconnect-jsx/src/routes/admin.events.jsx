@@ -29,6 +29,10 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { API_BASE_URL } from "../lib/api-config.js";
+import {
+  getEventStatus,
+  withDerivedEventStatuses,
+} from "../lib/event-status.js";
 
 export const Route = createFileRoute(
   "/admin/events"
@@ -182,7 +186,6 @@ const emptyForm = {
   date: "",
   venue: "",
   regCap: "100",
-  status: "Upcoming",
 };
 
 /* =====================================================
@@ -248,11 +251,11 @@ function ManageEvents() {
         }
 
         setEvents(
-          Array.isArray(
-            data?.events
+          withDerivedEventStatuses(
+            Array.isArray(data?.events)
+              ? data.events
+              : []
           )
-            ? data.events
-            : []
         );
       } catch (error) {
         console.error(
@@ -271,6 +274,17 @@ function ManageEvents() {
 
   useEffect(() => {
     loadEvents();
+
+    const interval = setInterval(() => {
+      setEvents((previous) =>
+        previous.map((event) => ({
+          ...event,
+          status: getEventStatus(event?.date),
+        }))
+      );
+    }, 60000);
+
+    return () => clearInterval(interval);
   }, [loadEvents]);
 
   /* ===================================================
@@ -353,10 +367,6 @@ function ManageEvents() {
         String(
           event?.regCap || 100
         ),
-
-      status:
-        event?.status ||
-        "Upcoming",
     });
 
     setShowModal(true);
@@ -524,9 +534,6 @@ function ManageEvents() {
 
                 regCap:
                   registrationCapacity,
-
-                status:
-                  form.status,
               }),
             }
           );
@@ -994,9 +1001,9 @@ function ManageEvents() {
 
                 </div>
 
-                {/* CLUB + STATUS */}
+                {/* CLUB / ORGANIZER */}
 
-                <div className="grid gap-4 sm:grid-cols-2">
+                <div className="grid gap-4">
 
                   <div>
 
@@ -1019,47 +1026,7 @@ function ManageEvents() {
 
                   </div>
 
-                  <div>
-
-                    <label className="mb-1.5 block text-sm font-medium">
-                      Status
-                    </label>
-
-                    <select
-                      value={
-                        form.status
-                      }
-                      onChange={(event) =>
-                        updateField(
-                          "status",
-                          event.target.value
-                        )
-                      }
-                      className="
-                        h-10
-                        w-full
-                        rounded-xl
-                        border
-                        border-input
-                        bg-background
-                        px-3
-                        text-sm
-                      "
-                    >
-                      <option value="Upcoming">
-                        Upcoming
-                      </option>
-
-                      <option value="Ongoing">
-                        Ongoing
-                      </option>
-
-                      <option value="Completed">
-                        Completed
-                      </option>
-                    </select>
-
-                  </div>
+                  
 
                 </div>
 

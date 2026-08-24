@@ -13,6 +13,7 @@ import { Progress } from "@/components/ui/progress";
 import { useCampus } from "@/lib/campus-store";
 import { cn } from "@/lib/utils";
 import { API_BASE_URL } from "../lib/api-config.js";
+import { getEventStatus } from "../lib/event-status.js";
 
 export const Route = createFileRoute("/events/")({
   head: () => ({
@@ -62,6 +63,17 @@ function EventsPage() {
   useEffect(() => {
     fetchEvents();
     fetchMyRegistrations();
+
+    const interval = setInterval(() => {
+      setEvents((previous) =>
+        previous.map((event) => ({
+          ...event,
+          status: getEventStatus(event?.date),
+        }))
+      );
+    }, 60000);
+
+    return () => clearInterval(interval);
   }, []);
 
   const fetchMyRegistrations = async () => {
@@ -130,8 +142,7 @@ function EventsPage() {
           summary:
             event.desc || "Campus event",
 
-          status:
-            event.status || "Upcoming",
+          status: getEventStatus(event.date),
         })
       );
 
@@ -287,12 +298,25 @@ function EventsPage() {
                     </p>
                   </div>
 
-                  <Badge
-                    className="shrink-0 rounded-lg"
-                    variant="secondary"
-                  >
-                    {event.category}
-                  </Badge>
+                  <div className="flex shrink-0 flex-col items-end gap-2">
+                    <Badge
+                      className="rounded-lg"
+                      variant="secondary"
+                    >
+                      {event.category}
+                    </Badge>
+
+                    <Badge
+                      className="rounded-lg"
+                      variant={
+                        event.status === "Completed"
+                          ? "outline"
+                          : "default"
+                      }
+                    >
+                      {event.status}
+                    </Badge>
+                  </div>
                 </div>
 
                 <p className="mt-3 text-sm text-muted-foreground">
@@ -367,16 +391,19 @@ function EventsPage() {
                       <Button
                         className="flex-1 rounded-xl"
                         disabled={
+                          event.status === "Completed" ||
                           registeringId === event.id ||
                           event.taken >= event.seats
                         }
                         onClick={() => handleRegister(event)}
                       >
-                        {event.taken >= event.seats
-                          ? "Event full"
-                          : registeringId === event.id
-                            ? "Registering..."
-                            : "Register"}
+                        {event.status === "Completed"
+                          ? "Event ended"
+                          : event.taken >= event.seats
+                            ? "Event full"
+                            : registeringId === event.id
+                              ? "Registering..."
+                              : "Register"}
                       </Button>
 
                       <Link

@@ -40,12 +40,6 @@ const eventSchema = new mongoose.Schema(
       min: 0,
     },
 
-    status: {
-      type: String,
-      enum: ["Upcoming", "Ongoing", "Completed"],
-      default: "Upcoming",
-    },
-
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
