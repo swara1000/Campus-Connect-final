@@ -573,7 +573,7 @@ export function AppShell({
               `,
               scrolled
                 ? "border-border/60 bg-background/70 shadow-[0_15px_45px_rgba(40,70,120,0.10)] backdrop-blur-xl"
-                : "border-transparent bg-background shadow-none backdrop-blur-none"
+                : "border-border/60 bg-background shadow-[0_4px_16px_rgba(40,70,120,0.06)] backdrop-blur-none"
             )}
           >
 
