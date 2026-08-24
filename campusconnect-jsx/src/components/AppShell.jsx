@@ -25,7 +25,7 @@ import {
   CalendarCog,
 } from "lucide-react";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 import { useCampus } from "@/lib/campus-store";
 
@@ -423,11 +423,28 @@ export function AppShell({
     theme,
     toggleTheme,
     signOut,
-    unreadNotificationCount, 
+    unreadNotificationCount,
   } = useCampus();
 
   const [open, setOpen] =
     useState(false);
+
+  const [scrolled, setScrolled] =
+    useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 12);
+    };
+
+    handleScroll();
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+    };
+  }, []);
 
   const handleSignOut = () => {
     signOut();
@@ -527,36 +544,37 @@ export function AppShell({
           ================================================= */}
 
           <header
-            className="
-              sticky
-              top-3
-              z-30
+            className={cn(
+              `
+                sticky
+                top-3
+                z-30
 
-              mb-4
+                mb-4
 
-              flex
-              min-h-[76px]
-              flex-wrap
-              items-center
-              justify-between
-              gap-3
+                flex
+                min-h-[76px]
+                flex-wrap
+                items-center
+                justify-between
+                gap-3
 
-              rounded-[28px]
-              border
-              border-border/60
+                rounded-[28px]
+                border
 
-              bg-background/80
+                px-3
+                py-3
 
-              px-3
-              py-3
+                transition-all
+                duration-300
 
-              shadow-[0_15px_45px_rgba(40,70,120,0.10)]
-
-              backdrop-blur-xl
-
-              sm:mb-6
-              sm:px-5
-            "
+                sm:mb-6
+                sm:px-5
+              `,
+              scrolled
+                ? "border-border/60 bg-background/70 shadow-[0_15px_45px_rgba(40,70,120,0.10)] backdrop-blur-xl"
+                : "border-transparent bg-background shadow-none backdrop-blur-none"
+            )}
           >
 
             <div className="flex min-w-0 items-center gap-3">
@@ -677,9 +695,9 @@ export function AppShell({
                 >
                   <Bell className="size-4" />
 
-                      {unreadNotificationCount > 0 && (
-                      <span className="absolute right-2 top-2 size-1.5 rounded-full bg-primary" />
-                      )}
+                  {unreadNotificationCount > 0 && (
+                    <span className="absolute right-2 top-2 size-1.5 rounded-full bg-primary" />
+                  )}
                 </Button>
               </Link>
 
