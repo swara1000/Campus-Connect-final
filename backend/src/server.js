@@ -31,8 +31,15 @@ const envSocketOrigins = process.env.ALLOWED_ORIGINS
   : [];
 
 const io = new Server(httpServer, {
-  cors: { origin: [...defaultSocketOrigins, ...envSocketOrigins], methods: ["GET", "POST"], credentials: true },
+  cors: {
+    origin: [...new Set([...defaultSocketOrigins, ...envSocketOrigins])],
+    methods: ["GET", "POST"],
+    credentials: true,
+  },
 });
+
+const conversationRoom = (conversationId) =>
+  `conversation-${String(conversationId)}`;
 
 /* =====================================================
    SOCKET EVENTS
@@ -77,7 +84,7 @@ io.on("connection", (socket) => {
         return;
       }
 
-      socket.join(conversationId);
+      socket.join(conversationRoom(conversationId));
 
       console.log(
         `Socket ${socket.id} joined conversation ${conversationId}`
@@ -96,7 +103,7 @@ io.on("connection", (socket) => {
         return;
       }
 
-      socket.leave(conversationId);
+      socket.leave(conversationRoom(conversationId));
 
       console.log(
         `Socket ${socket.id} left conversation ${conversationId}`
@@ -119,7 +126,7 @@ io.on("connection", (socket) => {
       }
 
       socket
-        .to(conversationId)
+        .to(conversationRoom(conversationId))
         .emit("user-typing", {
           conversationId,
           userName,
@@ -141,7 +148,7 @@ io.on("connection", (socket) => {
       }
 
       socket
-        .to(conversationId)
+        .to(conversationRoom(conversationId))
         .emit(
           "user-stop-typing",
           {

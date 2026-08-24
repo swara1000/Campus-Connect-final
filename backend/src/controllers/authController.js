@@ -39,6 +39,14 @@ const formatUser = (user) => {
     year: user.year || "",
     bio: user.bio || "",
 
+    preferences: {
+      events: user.preferences?.events ?? true,
+      clubs: user.preferences?.clubs ?? true,
+      mentions: user.preferences?.mentions ?? true,
+      digest: user.preferences?.digest ?? false,
+      discoverable: user.preferences?.discoverable ?? true,
+    },
+
     status: user.status || "active",
 
     createdAt: user.createdAt,
@@ -57,6 +65,7 @@ export const updateProfile = async (req, res) => {
       department,
       year,
       bio,
+      preferences,
     } = req.body;
 
     const user = await User.findById(req.user._id);
@@ -82,6 +91,26 @@ export const updateProfile = async (req, res) => {
 
     if (bio !== undefined) {
       user.bio = String(bio).trim();
+    }
+
+    if (preferences && typeof preferences === "object") {
+      if (!user.preferences) {
+        user.preferences = {};
+      }
+
+      const allowedKeys = [
+        "events",
+        "clubs",
+        "mentions",
+        "digest",
+        "discoverable",
+      ];
+
+      for (const key of allowedKeys) {
+        if (preferences[key] !== undefined) {
+          user.preferences[key] = Boolean(preferences[key]);
+        }
+      }
     }
 
     await user.save();

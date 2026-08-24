@@ -413,9 +413,7 @@ export const sendMessage =
         req.app.get("io");
 
       if (io) {
-        io.to(
-          `conversation-${conversationId}`
-        ).emit(
+        io.to(`conversation-${String(conversationId)}`).emit(
           "new-message",
           populatedMessage
         );

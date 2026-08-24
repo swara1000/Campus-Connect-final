@@ -195,27 +195,17 @@ function ChatPage() {
   ===================================================== */
 
   useEffect(() => {
-    if (!activeId) {
+    if (!activeId || !socket.connected) {
       return;
     }
 
-    console.log(
-      "Joining conversation:",
-      activeId
-    );
-
-    socket.emit(
-      "join-conversation",
-      activeId
-    );
+    console.log("Joining conversation:", activeId);
+    socket.emit("join-conversation", activeId);
 
     return () => {
-      socket.emit(
-        "leave-conversation",
-        activeId
-      );
+      socket.emit("leave-conversation", activeId);
     };
-  }, [activeId]);
+  }, [activeId, connected]);
 
   /* =====================================================
      RECEIVE REAL-TIME MESSAGE

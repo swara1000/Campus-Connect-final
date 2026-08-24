@@ -52,6 +52,14 @@ const userSchema = new mongoose.Schema(
       trim: true,
     },
 
+    preferences: {
+      events: { type: Boolean, default: true },
+      clubs: { type: Boolean, default: true },
+      mentions: { type: Boolean, default: true },
+      digest: { type: Boolean, default: false },
+      discoverable: { type: Boolean, default: true },
+    },
+
     status: {
       type: String,
       enum: ["active", "blocked"],
