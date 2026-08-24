@@ -142,3 +142,23 @@ export function AppShell({ title, subtitle, action, children }) {
     </div>
   );
 }
+
+export function GlassCard({ className, children }) {
+  return (
+    <div
+      className={cn(
+        `
+          rounded-2xl
+          bg-white/40 dark:bg-zinc-900/40
+          backdrop-blur-md
+          border border-border/50
+
+          p-4 sm:p-5
+        `,
+        className
+      )}
+    >
+      {children}
+    </div>
+  );
+}
