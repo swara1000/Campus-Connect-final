@@ -139,56 +139,6 @@ function ChatPage() {
 
   const currentUserId = getCurrentUserId();
 
-  /* =====================================================
-     SOCKET CONNECTION
-  ===================================================== */
-
-  useEffect(() => {
-    if (!socket.connected) {
-      socket.connect();
-    }
-
-    const handleConnect = () => {
-      console.log(
-        "Socket connected:",
-        socket.id
-      );
-
-      setConnected(true);
-    };
-
-    const handleDisconnect = () => {
-      console.log("Socket disconnected");
-
-      setConnected(false);
-    };
-
-    socket.on(
-      "connect",
-      handleConnect
-    );
-
-    socket.on(
-      "disconnect",
-      handleDisconnect
-    );
-
-    if (socket.connected) {
-      setConnected(true);
-    }
-
-    return () => {
-      socket.off(
-        "connect",
-        handleConnect
-      );
-
-      socket.off(
-        "disconnect",
-        handleDisconnect
-      );
-    };
-  }, []);
 
   /* =====================================================
      JOIN CONVERSATION ROOM
@@ -972,22 +922,7 @@ function ChatPage() {
       title="Chat"
       subtitle="Real-time private peer learning conversations"
       action={
-        <Badge
-          variant="secondary"
-          className="hidden gap-1.5 rounded-lg sm:flex"
-        >
-          <Circle
-            className={cn(
-              "size-2",
-              connected &&
-                "fill-[var(--success)] text-[var(--success)]"
-            )}
-          />
-
-          {connected
-            ? "Connected"
-            : "Connecting..."}
-        </Badge>
+       
       }
     >
       <div className="grid gap-4 lg:grid-cols-[18rem_minmax(0,1fr)]">
