@@ -202,7 +202,7 @@
 }
 
 /* Responsive safety rules */
-html, body { max-width: 100%; overflow-x: hidden; }
+html, body { max-width: 100%; overflow-x: clip; }
 img, video, svg { max-width: 100%; }
 @media (max-width: 640px) {
   button, input, textarea, select { min-width: 0; }
