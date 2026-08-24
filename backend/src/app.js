@@ -27,12 +27,28 @@ const defaultOrigins = [
   "http://localhost:5173", "http://localhost:5174", "http://localhost:5175",
   "http://localhost:5176", "http://localhost:8080", "http://localhost:8081",
 ];
+const normalizeOrigin = (origin) => origin.trim().replace(/\/+$/, "");
 const envOrigins = process.env.ALLOWED_ORIGINS
-  ? process.env.ALLOWED_ORIGINS.split(",").map((o) => o.trim())
+  ? process.env.ALLOWED_ORIGINS.split(",").map(normalizeOrigin).filter(Boolean)
   : [];
-const allowedOrigins = [...defaultOrigins, ...envOrigins];
+const allowedOrigins = new Set([
+  ...defaultOrigins.map(normalizeOrigin),
+  ...envOrigins,
+]);
 
-app.use(cors({ origin: allowedOrigins, credentials: true }));
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.has(normalizeOrigin(origin))) {
+        callback(null, true);
+        return;
+      }
+
+      callback(new Error(`HTTP origin not allowed: ${origin}`));
+    },
+    credentials: true,
+  })
+);
 
 // =====================================================
 // MIDDLEWARE

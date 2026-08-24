@@ -144,10 +144,6 @@ function ChatPage() {
   ===================================================== */
 
   useEffect(() => {
-    if (!socket.connected) {
-      socket.connect();
-    }
-
     const handleConnect = () => {
       console.log(
         "Socket connected:",
@@ -163,30 +159,29 @@ function ChatPage() {
       setConnected(false);
     };
 
-    socket.on(
-      "connect",
-      handleConnect
-    );
+    const handleConnectError = (error) => {
+      console.error("Socket connection error:", error.message);
+      setConnected(false);
+    };
 
-    socket.on(
-      "disconnect",
-      handleDisconnect
-    );
+    // Register listeners before connecting so the initial connection cannot
+    // race past the connect handler and prevent the conversation room join.
+    socket.on("connect", handleConnect);
+    socket.on("disconnect", handleDisconnect);
+    socket.on("connect_error", handleConnectError);
 
     if (socket.connected) {
       setConnected(true);
+    } else {
+      socket.connect();
     }
 
     return () => {
-      socket.off(
-        "connect",
-        handleConnect
-      );
-
-      socket.off(
-        "disconnect",
-        handleDisconnect
-      );
+      socket.off("connect", handleConnect);
+      socket.off("disconnect", handleDisconnect);
+      socket.off("connect_error", handleConnectError);
+      socket.disconnect();
+      setConnected(false);
     };
   }, []);
 
@@ -697,17 +692,12 @@ function ChatPage() {
         return;
       }
 
-      socket.emit(
-        "typing",
-        {
-          conversationId:
-            activeId,
-
-          userName:
-            user?.name ||
-            "Student",
-        }
-      );
+      if (socket.connected) {
+        socket.emit("typing", {
+          conversationId: activeId,
+          userName: user?.name || "Student",
+        });
+      }
 
       if (
         typingTimeoutRef.current

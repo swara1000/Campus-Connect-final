@@ -26,13 +26,26 @@ const defaultSocketOrigins = [
   "http://localhost:5173", "http://localhost:5174", "http://localhost:5175",
   "http://localhost:5176", "http://localhost:8080", "http://localhost:8081",
 ];
+const normalizeOrigin = (origin) => origin.trim().replace(/\/+$/, "");
 const envSocketOrigins = process.env.ALLOWED_ORIGINS
-  ? process.env.ALLOWED_ORIGINS.split(",").map((o) => o.trim())
+  ? process.env.ALLOWED_ORIGINS.split(",").map(normalizeOrigin).filter(Boolean)
   : [];
+const allowedSocketOrigins = new Set([
+  ...defaultSocketOrigins.map(normalizeOrigin),
+  ...envSocketOrigins,
+]);
 
 const io = new Server(httpServer, {
   cors: {
-    origin: [...new Set([...defaultSocketOrigins, ...envSocketOrigins])],
+    origin: (origin, callback) => {
+      // Socket.IO health checks and same-origin requests may omit Origin.
+      if (!origin || allowedSocketOrigins.has(normalizeOrigin(origin))) {
+        callback(null, true);
+        return;
+      }
+
+      callback(new Error(`Socket origin not allowed: ${origin}`));
+    },
     methods: ["GET", "POST"],
     credentials: true,
   },
