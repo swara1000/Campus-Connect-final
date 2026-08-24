@@ -29,6 +29,7 @@ import {
   primaryBtnCls,
 } from "../utils";
 import { API_BASE_URL } from "../api-config.js";
+import { adminFetch } from "../api-client.js";
 
 const API_URL = `${API_BASE_URL}/api/study-materials`;
 
@@ -261,7 +262,7 @@ export default function StudyMaterials({
     try {
       setLoading(true);
 
-      const response = await fetch(
+      const response = await adminFetch(
         API_URL
       );
 
@@ -422,7 +423,7 @@ export default function StudyMaterials({
         return;
       }
 
-      const response = await fetch(
+      const response = await adminFetch(
         API_URL,
         {
           method: "POST",
@@ -535,7 +536,7 @@ export default function StudyMaterials({
         modal.material._id ||
         modal.material.id;
 
-      const response = await fetch(
+      const response = await adminFetch(
         `${API_URL}/${materialId}`,
         {
           method: "PUT",
@@ -627,7 +628,7 @@ export default function StudyMaterials({
         deleteTarget._id ||
         deleteTarget.id;
 
-      const response = await fetch(
+      const response = await adminFetch(
         `${API_URL}/${materialId}`,
         {
           method: "DELETE",

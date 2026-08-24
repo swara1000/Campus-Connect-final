@@ -4,6 +4,7 @@ import { SectionHeader, SearchBar, Modal, Field, Select, ConfirmDialog, StatCard
 import { seedDrives } from "../data/mockData";
 import { formatDate, inputCls, textareaCls, cardShadowCls, secondaryBtnCls, primaryBtnCls } from "../utils";
 import { API_BASE_URL } from "../api-config.js";
+import { adminFetch } from "../api-client.js";
 
 /* =====================================================
    BACKEND API URL
@@ -183,7 +184,7 @@ export default function Placements({ notify }) {
     try {
       setLoading(true);
 
-      const response = await fetch(API_URL);
+      const response = await adminFetch(API_URL);
       const data = await response.json();
 
       if (!response.ok) {
@@ -264,7 +265,7 @@ export default function Placements({ notify }) {
         return;
       }
 
-      const response = await fetch(API_URL, {
+      const response = await adminFetch(API_URL, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -333,7 +334,7 @@ export default function Placements({ notify }) {
         return;
       }
 
-      const response = await fetch(`${API_URL}/${targetId}`, {
+      const response = await adminFetch(`${API_URL}/${targetId}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -378,7 +379,7 @@ export default function Placements({ notify }) {
         return;
       }
 
-      const response = await fetch(`${API_URL}/${targetId}`, {
+      const response = await adminFetch(`${API_URL}/${targetId}`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -421,7 +422,7 @@ export default function Placements({ notify }) {
         return;
       }
 
-      const response = await fetch(`${API_URL}/${targetId}`, {
+      const response = await adminFetch(`${API_URL}/${targetId}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",

@@ -37,6 +37,7 @@ import {
   primaryBtnCls,
 } from "../utils";
 import { API_BASE_URL } from "../api-config.js";
+import { adminFetch } from "../api-client.js";
 
 const API_URL =
   `${API_BASE_URL}/api/clubs`;
@@ -301,7 +302,7 @@ export default function Clubs({
       setLoading(true);
 
       const response =
-        await fetch(API_URL);
+        await adminFetch(API_URL);
 
       const data =
         await response.json();
@@ -432,7 +433,7 @@ export default function Clubs({
         }
 
         const response =
-          await fetch(
+          await adminFetch(
             API_URL,
             {
               method: "POST",
@@ -573,7 +574,7 @@ export default function Clubs({
           modal.club.id;
 
         const response =
-          await fetch(
+          await adminFetch(
             `${API_URL}/${clubId}`,
             {
               method: "PUT",
@@ -705,7 +706,7 @@ export default function Clubs({
           club.id;
 
         const response =
-          await fetch(
+          await adminFetch(
             `${API_URL}/${clubId}`,
             {
               method:
@@ -797,7 +798,7 @@ export default function Clubs({
           coordinatorClub.id;
 
         const response =
-          await fetch(
+          await adminFetch(
             `${API_URL}/${clubId}`,
             {
               method: "PUT",
@@ -909,7 +910,7 @@ export default function Clubs({
         setClubMembers([]);
 
         const response =
-          await fetch(
+          await adminFetch(
             `${API_URL}/${clubId}/members`,
             {
               method: "GET",

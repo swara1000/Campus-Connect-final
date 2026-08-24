@@ -4,6 +4,7 @@ import { SectionHeader, SearchBar, Field, Select, EmptyState, ConfirmDialog } fr
 import { seedNotifications, STATUS_STYLES } from "../data/mockData";
 import { inputCls, textareaCls, uid, cardShadowCls, secondaryBtnCls, primaryBtnCls } from "../utils";
 import { API_BASE_URL } from "../api-config.js";
+import { adminFetch } from "../api-client.js";
 
 const API_URL = `${API_BASE_URL}/api/notifications/admin`;
 
@@ -50,7 +51,7 @@ export default function Notifications({ notify }) {
         return;
       }
 
-      const response = await fetch(API_URL, {
+      const response = await adminFetch(API_URL, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -117,7 +118,7 @@ export default function Notifications({ notify }) {
     try {
       setSending(true);
 
-      const response = await fetch(API_URL, {
+      const response = await adminFetch(API_URL, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -164,7 +165,7 @@ export default function Notifications({ notify }) {
     }
 
     try {
-      const response = await fetch(`${API_URL}/${n.id}`, {
+      const response = await adminFetch(`${API_URL}/${n.id}`, {
         method: "DELETE",
         headers: {
           Authorization: `Bearer ${token}`,

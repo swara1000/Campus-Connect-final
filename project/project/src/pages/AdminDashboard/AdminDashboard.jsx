@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   CalendarDays,
   Users,
@@ -11,6 +11,8 @@ import {
 import { useNavigate } from "react-router-dom";
 import { StatCard } from "../../components/Shared";
 import { cardShadowCls, primaryBtnShadowCls } from "../../utils";
+import { adminFetch } from "../../api-client.js";
+import { API_BASE_URL } from "../../api-config.js";
 import {
   seedEvents,
   seedClubs,
@@ -66,18 +68,61 @@ const quickActions = [
 
 export default function AdminDashboard() {
   const navigate = useNavigate();
+  const [summary, setSummary] = useState({
+    events: seedEvents,
+    clubs: seedClubs,
+    requests: seedLearningRequests,
+  });
+
+  useEffect(() => {
+    let active = true;
+
+    const loadSummary = async () => {
+      try {
+        const [eventsResponse, clubsResponse, requestsResponse] = await Promise.all([
+          adminFetch(`${API_BASE_URL}/api/events`),
+          adminFetch(`${API_BASE_URL}/api/clubs`),
+          adminFetch(`${API_BASE_URL}/api/peer-learning`),
+        ]);
+        const [eventsData, clubsData, requestsData] = await Promise.all([
+          eventsResponse.json(),
+          clubsResponse.json(),
+          requestsResponse.json(),
+        ]);
+
+        if (!active) return;
+        setSummary({
+          events: eventsResponse.ok && Array.isArray(eventsData.events) ? eventsData.events : seedEvents,
+          clubs: clubsResponse.ok && Array.isArray(clubsData.clubs) ? clubsData.clubs : seedClubs,
+          requests: requestsResponse.ok && Array.isArray(requestsData.requests) ? requestsData.requests : seedLearningRequests,
+        });
+      } catch (error) {
+        console.error("Admin dashboard summary error:", error);
+      }
+    };
+
+    loadSummary();
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const stats = useMemo(() => {
-    const upcomingEvents = seedEvents.filter((e) => e.status === "Upcoming").length;
-    const pendingRequests = seedLearningRequests.filter((r) => r.status === "Pending").length;
+    const upcomingEvents = summary.events.filter((event) => {
+      const status = String(event.status || "").toLowerCase();
+      return status === "upcoming" || (status !== "completed" && new Date(event.date) >= new Date());
+    }).length;
+    const pendingRequests = summary.requests.filter(
+      (request) => String(request.status || "").toLowerCase() === "pending"
+    ).length;
 
     return [
-      { label: "Total Events", value: seedEvents.length, icon: CalendarDays, tint: "bg-blue-50 text-blue-600" },
-      { label: "Total Clubs", value: seedClubs.length, icon: Users, tint: "bg-violet-50 text-violet-600" },
+      { label: "Total Events", value: summary.events.length, icon: CalendarDays, tint: "bg-blue-50 text-blue-600" },
+      { label: "Total Clubs", value: summary.clubs.length, icon: Users, tint: "bg-violet-50 text-violet-600" },
       { label: "Upcoming Events", value: upcomingEvents, icon: CalendarDays, tint: "bg-emerald-50 text-emerald-600" },
       { label: "Pending Requests", value: pendingRequests, icon: UserRoundCheck, tint: "bg-orange-50 text-orange-600" },
     ];
-  }, []);
+  }, [summary]);
 
   const recentActivities = useMemo(
     () => [

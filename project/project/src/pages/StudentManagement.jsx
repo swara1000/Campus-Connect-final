@@ -15,6 +15,7 @@ import {
   X,
 } from "lucide-react";
 import { API_BASE_URL } from "../api-config.js";
+import { adminFetch } from "../api-client.js";
 
 const API_URL = `${API_BASE_URL}/api`;
 
@@ -45,7 +46,7 @@ function StudentManagement() {
       setLoading(true);
       setError("");
 
-      const response = await fetch(
+      const response = await adminFetch(
         `${API_URL}/students`
       );
 

@@ -28,6 +28,7 @@ import {
   AVATAR_COLORS,
 } from "../utils";
 import { API_BASE_URL } from "../api-config.js";
+import { adminFetch } from "../api-client.js";
 
 /* =====================================================
    BACKEND API
@@ -158,7 +159,7 @@ export default function LearningRequests({
           }
 
           const response =
-            await fetch(
+            await adminFetch(
               API_URL,
               {
                 method: "GET",
@@ -355,7 +356,7 @@ export default function LearningRequests({
         );
 
         const response =
-          await fetch(
+          await adminFetch(
             `${API_URL}/${request._id}/admin-approve`,
             {
               method: "POST",
@@ -467,7 +468,7 @@ export default function LearningRequests({
         );
 
         const response =
-          await fetch(
+          await adminFetch(
             `${API_URL}/${request._id}/admin-reject`,
             {
               method: "POST",

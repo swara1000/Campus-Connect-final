@@ -35,6 +35,7 @@ import {
   primaryBtnCls,
 } from "../utils";
 import { API_BASE_URL } from "../api-config.js";
+import { adminFetch } from "../api-client.js";
 import {
   withDerivedEventStatus,
   withDerivedEventStatuses,
@@ -223,7 +224,7 @@ export default function Events({ notify }) {
       setLoading(true);
       setError("");
 
-      const response = await fetch(API_URL, {
+      const response = await adminFetch(API_URL, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -282,7 +283,7 @@ export default function Events({ notify }) {
     try {
       setRosterLoading(true);
 
-      const response = await fetch(`${API_URL}/${eventId}/registrations`, {
+      const response = await adminFetch(`${API_URL}/${eventId}/registrations`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -358,7 +359,7 @@ export default function Events({ notify }) {
         return;
       }
 
-      const response = await fetch(
+      const response = await adminFetch(
         API_URL,
         {
           method: "POST",
@@ -464,7 +465,7 @@ export default function Events({ notify }) {
         modal.event._id ||
         modal.event.id;
 
-      const response = await fetch(
+      const response = await adminFetch(
         `${API_URL}/${eventId}`,
         {
           method: "PUT",
@@ -574,7 +575,7 @@ export default function Events({ notify }) {
         event._id ||
         event.id;
 
-      const response = await fetch(
+      const response = await adminFetch(
         `${API_URL}/${eventId}`,
         {
           method: "DELETE",
