@@ -423,6 +423,7 @@ export function AppShell({
     theme,
     toggleTheme,
     signOut,
+    unreadNotificationCount, 
   } = useCampus();
 
   const [open, setOpen] =
@@ -676,7 +677,9 @@ export function AppShell({
                 >
                   <Bell className="size-4" />
 
-                  <span className="absolute right-2 top-2 size-1.5 rounded-full bg-primary" />
+                      {unreadNotificationCount > 0 && (
+                      <span className="absolute right-2 top-2 size-1.5 rounded-full bg-primary" />
+                      )}
                 </Button>
               </Link>
 
