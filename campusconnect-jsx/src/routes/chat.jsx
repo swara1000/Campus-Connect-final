@@ -968,7 +968,10 @@ function ChatPage() {
   ===================================================== */
 
   return (
-    
+    <AppShell
+      title="Campus Chat"
+      subtitle="Real-time private messaging between matched peer-learning students."
+    >
       <div className="grid gap-4 lg:grid-cols-[18rem_minmax(0,1fr)]">
 
         {/* CONVERSATION LIST */}
