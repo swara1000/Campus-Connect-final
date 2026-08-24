@@ -9,6 +9,7 @@ import {
   MessagesSquare,
   Settings2,
   CheckCheck,
+  Briefcase,
 } from "lucide-react";
 
 import { AppShell, GlassCard } from "@/components/AppShell";
@@ -42,6 +43,7 @@ const iconFor = {
   event: CalendarDays,
   club: Users,
   chat: MessagesSquare,
+  placement: Briefcase,
   system: Settings2,
 };
 
@@ -53,6 +55,7 @@ const tabs = [
   "All",
   "Events",
   "Clubs",
+  "Placements",
   "Mentions",
 ];
 
@@ -93,6 +96,13 @@ function NotificationsPage() {
           return (
             notification.type ===
             "club"
+          );
+        }
+
+        if (tab === "Placements") {
+          return (
+            notification.type ===
+            "placement"
           );
         }
 

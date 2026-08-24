@@ -29,6 +29,7 @@ import { Route as TeamsRouteImport } from './routes/teams'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as AdminAnalyticsRouteImport } from './routes/admin.analytics'
 import { Route as AdminEventsRouteImport } from './routes/admin.events'
+import { Route as AdminPlacementsRouteImport } from './routes/admin.placements'
 import { Route as BookingIndexRouteImport } from './routes/booking.index'
 import { Route as ClubsIndexRouteImport } from './routes/clubs.index'
 import { Route as ClubsClubIdRouteImport } from './routes/clubs.$clubId'
@@ -136,6 +137,11 @@ const AdminEventsRoute = AdminEventsRouteImport.update({
   path: '/admin/events',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminPlacementsRoute = AdminPlacementsRouteImport.update({
+  id: '/admin/placements',
+  path: '/admin/placements',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const BookingIndexRoute = BookingIndexRouteImport.update({
   id: '/booking/',
   path: '/booking/',
@@ -188,6 +194,7 @@ export interface FileRoutesByFullPath {
   '/teams': typeof TeamsRoute
   '/admin/analytics': typeof AdminAnalyticsRoute
   '/admin/events': typeof AdminEventsRoute
+  '/admin/placements': typeof AdminPlacementsRoute
   '/clubs/$clubId': typeof ClubsClubIdRoute
   '/events/$eventId': typeof EventsEventIdRoute
   '/admin/': typeof AdminIndexRoute
@@ -216,6 +223,7 @@ export interface FileRoutesByTo {
   '/teams': typeof TeamsRoute
   '/admin/analytics': typeof AdminAnalyticsRoute
   '/admin/events': typeof AdminEventsRoute
+  '/admin/placements': typeof AdminPlacementsRoute
   '/clubs/$clubId': typeof ClubsClubIdRoute
   '/events/$eventId': typeof EventsEventIdRoute
   '/admin': typeof AdminIndexRoute
@@ -245,6 +253,7 @@ export interface FileRoutesById {
   '/teams': typeof TeamsRoute
   '/admin/analytics': typeof AdminAnalyticsRoute
   '/admin/events': typeof AdminEventsRoute
+  '/admin/placements': typeof AdminPlacementsRoute
   '/clubs/$clubId': typeof ClubsClubIdRoute
   '/events/$eventId': typeof EventsEventIdRoute
   '/admin/': typeof AdminIndexRoute
@@ -275,6 +284,7 @@ export interface FileRouteTypes {
     | '/teams'
     | '/admin/analytics'
     | '/admin/events'
+    | '/admin/placements'
     | '/clubs/$clubId'
     | '/events/$eventId'
     | '/admin/'
@@ -303,6 +313,7 @@ export interface FileRouteTypes {
     | '/teams'
     | '/admin/analytics'
     | '/admin/events'
+    | '/admin/placements'
     | '/clubs/$clubId'
     | '/events/$eventId'
     | '/admin'
@@ -331,6 +342,7 @@ export interface FileRouteTypes {
     | '/teams'
     | '/admin/analytics'
     | '/admin/events'
+    | '/admin/placements'
     | '/clubs/$clubId'
     | '/events/$eventId'
     | '/admin/'
@@ -360,6 +372,7 @@ export interface RootRouteChildren {
   TeamsRoute: typeof TeamsRoute
   AdminAnalyticsRoute: typeof AdminAnalyticsRoute
   AdminEventsRoute: typeof AdminEventsRoute
+  AdminPlacementsRoute: typeof AdminPlacementsRoute
   ClubsClubIdRoute: typeof ClubsClubIdRoute
   EventsEventIdRoute: typeof EventsEventIdRoute
   AdminIndexRoute: typeof AdminIndexRoute
@@ -511,6 +524,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminEventsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/placements': {
+      id: '/admin/placements'
+      path: '/admin/placements'
+      fullPath: '/admin/placements'
+      preLoaderRoute: typeof AdminPlacementsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/booking/': {
       id: '/booking/'
       path: '/booking'
@@ -576,6 +596,7 @@ const rootRouteChildren: RootRouteChildren = {
   TeamsRoute: TeamsRoute,
   AdminAnalyticsRoute: AdminAnalyticsRoute,
   AdminEventsRoute: AdminEventsRoute,
+  AdminPlacementsRoute: AdminPlacementsRoute,
   ClubsClubIdRoute: ClubsClubIdRoute,
   EventsEventIdRoute: EventsEventIdRoute,
   AdminIndexRoute: AdminIndexRoute,

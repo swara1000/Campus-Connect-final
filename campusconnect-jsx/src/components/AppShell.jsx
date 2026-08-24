@@ -132,8 +132,8 @@ const adminNav = [
     icon: Building2,
   },
   {
-    to: "/placements",
-    label: "Placements",
+    to: "/admin/placements",
+    label: "Manage Placements",
     icon: Briefcase,
   },
   {

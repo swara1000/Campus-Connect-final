@@ -11,7 +11,7 @@ const notificationSchema = new mongoose.Schema(
 
     type: {
       type: String,
-      enum: ["event", "club", "chat", "system"],
+      enum: ["event", "club", "chat", "placement", "system"],
       default: "system",
     },
 
@@ -30,6 +30,12 @@ const notificationSchema = new mongoose.Schema(
     eventId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Event",
+      default: null,
+    },
+
+    placementId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Placement",
       default: null,
     },
 

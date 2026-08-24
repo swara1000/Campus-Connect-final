@@ -219,8 +219,6 @@ function Dashboard() {
     notificationLoading,
     unreadNotificationCount,
     markNotificationAsRead,
-
-    appliedJobs,
   } = useCampus();
 
   /* ===================================================
@@ -238,6 +236,9 @@ function Dashboard() {
 
   const [peerRequests, setPeerRequests] =
     useState([]);
+
+  const [myApplicationsCount, setMyApplicationsCount] =
+    useState(0);
 
   const [unreadMessages, setUnreadMessages] =
     useState(0);
@@ -274,6 +275,7 @@ function Dashboard() {
           materialData,
           peerData,
           messageData,
+          myApplicationsData,
         ] = await Promise.all([
           fetchJson(
             `${API_URL}/events`
@@ -302,6 +304,18 @@ function Dashboard() {
           token
             ? fetchJson(
                 `${API_URL}/chat/unread-count`,
+                {
+                  headers:
+                    authHeaders,
+                }
+              )
+            : Promise.resolve(
+                null
+              ),
+
+          token
+            ? fetchJson(
+                `${API_URL}/placements/my-applications`,
                 {
                   headers:
                     authHeaders,
@@ -342,6 +356,16 @@ function Dashboard() {
         ) {
           setUnreadMessages(
             messageData.unreadCount
+          );
+        }
+
+        if (
+          Array.isArray(
+            myApplicationsData?.placements
+          )
+        ) {
+          setMyApplicationsCount(
+            myApplicationsData.placements.length
           );
         }
 
@@ -481,14 +505,11 @@ function Dashboard() {
       .slice(0, 3);
 
   /*
-    Number of actual applications in
-    the current CampusConnect store.
+    Number of actual applications, fetched
+    live from the placements backend.
   */
 
-  const applicationCount =
-    Array.isArray(appliedJobs)
-      ? appliedJobs.length
-      : 0;
+  const applicationCount = myApplicationsCount;
 
   /*
     Total counts from backend.

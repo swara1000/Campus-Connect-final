@@ -15,6 +15,7 @@ import chatRoutes from "./routes/chatRoutes.js";
 import aiRoutes from "./routes/aiRoutes.js";
 import studyMaterialRoutes from "./routes/studyMaterialRoutes.js";
 import notificationRoutes from "./routes/notificationRoutes.js";
+import placementRoutes from "./routes/placementRoutes.js";
 
 const app = express();
 
@@ -92,6 +93,11 @@ app.use(
 app.use(
   "/api/notifications",
   notificationRoutes
+);
+
+app.use(
+  "/api/placements",
+  placementRoutes
 );
 
 // =====================================================
