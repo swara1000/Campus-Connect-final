@@ -1139,16 +1139,21 @@ function ChatPage() {
                             message.id
                           }
                           className={cn(
-                            "flex gap-3",
+                            "flex items-end gap-3",
                             message.me &&
                               "flex-row-reverse"
                           )}
                         >
 
-                          <span className="grid size-8 shrink-0 place-items-center rounded-full bg-gradient-brand text-[10px] font-bold text-primary-foreground">
-                            {
-                              message.initials
-                            }
+                          <span
+                            className={cn(
+                              "grid size-8 shrink-0 place-items-center rounded-full text-[10px] font-bold",
+                              message.me
+                                ? "bg-gradient-brand text-primary-foreground"
+                                : "bg-slate-200 text-slate-600 dark:bg-slate-700 dark:text-slate-200"
+                            )}
+                          >
+                            {message.initials}
                           </span>
 
                           <div
@@ -1159,23 +1164,31 @@ function ChatPage() {
                             )}
                           >
 
-                            <p className="mb-1 text-[11px] text-muted-foreground">
-                              {
-                                message.from
-                              }{" "}
-                              ·{" "}
-                              {
-                                message.time
-                              }
-                            </p>
+                            <div className="mb-1 flex items-center gap-2 text-[11px]">
+                              <span
+                                className={cn(
+                                  "font-semibold",
+                                  message.me
+                                    ? "text-primary"
+                                    : "text-foreground"
+                                )}
+                              >
+                                {message.me
+                                  ? "You"
+                                  : message.from || "Student"}
+                              </span>
+                              <span className="text-muted-foreground">
+                                {message.time}
+                              </span>
+                            </div>
 
                             <p
                               className={cn(
-                                "inline-block rounded-2xl px-4 py-2.5 text-left text-sm",
+                                "inline-block max-w-full rounded-2xl px-4 py-2.5 text-left text-sm leading-relaxed shadow-sm",
 
                                 message.me
-                                  ? "bg-gradient-brand text-primary-foreground"
-                                  : "border border-border/60 bg-card/80"
+                                  ? "rounded-br-md bg-gradient-brand text-primary-foreground"
+                                  : "rounded-bl-md border border-slate-200 bg-slate-100 text-slate-800 dark:border-slate-700/60 dark:bg-slate-800/70 dark:text-slate-100"
                               )}
                             >
                               {
