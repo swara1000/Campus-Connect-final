@@ -39,6 +39,13 @@ const notificationSchema = new mongoose.Schema(
       default: null,
     },
 
+    broadcastId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "AdminBroadcast",
+      default: null,
+      index: true,
+    },
+
     read: {
       type: Boolean,
       default: false,
