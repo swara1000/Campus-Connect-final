@@ -15,6 +15,7 @@ import {
   LogOut,
   GraduationCap,
   Menu,
+  ChevronDown,
   BookOpen,
   Bot,
   UsersRound,
@@ -429,22 +430,17 @@ export function AppShell({
   const [open, setOpen] =
     useState(false);
 
-  const [scrolled, setScrolled] =
+  const [profileOpen, setProfileOpen] =
     useState(false);
 
+  const pathname = useRouterState({
+    select: (state) => state.location.pathname,
+  });
+
   useEffect(() => {
-    const handleScroll = () => {
-      setScrolled(window.scrollY > 12);
-    };
-
-    handleScroll();
-
-    window.addEventListener("scroll", handleScroll, { passive: true });
-
-    return () => {
-      window.removeEventListener("scroll", handleScroll);
-    };
-  }, []);
+    setOpen(false);
+    setProfileOpen(false);
+  }, [pathname]);
 
   const handleSignOut = () => {
     signOut();
@@ -544,37 +540,36 @@ export function AppShell({
           ================================================= */}
 
           <header
-            className={cn(
-              `
-                sticky
-                top-3
-                z-30
+            className="
+              sticky
+              top-3
+              z-30
 
-                mb-4
+              mb-4
 
-                flex
-                min-h-[76px]
-                flex-wrap
-                items-center
-                justify-between
-                gap-3
+              flex
+              min-h-[76px]
+              flex-wrap
+              items-center
+              justify-between
+              gap-3
 
-                rounded-[28px]
-                border
+              rounded-[28px]
+              border
+              border-border/60
 
-                px-3
-                py-3
+              bg-background/80
 
-                transition-all
-                duration-300
+              px-3
+              py-3
 
-                sm:mb-6
-                sm:px-5
-              `,
-              scrolled
-                ? "border-border/60 bg-background/70 shadow-[0_15px_45px_rgba(40,70,120,0.10)] backdrop-blur-xl"
-                : "border-border/60 bg-background shadow-[0_4px_16px_rgba(40,70,120,0.06)] backdrop-blur-none"
-            )}
+              shadow-[0_15px_45px_rgba(40,70,120,0.10)]
+
+              backdrop-blur-xl
+
+              sm:mb-6
+              sm:px-5
+            "
           >
 
             <div className="flex min-w-0 items-center gap-3">
@@ -637,6 +632,7 @@ export function AppShell({
                     font-bold
                     leading-tight
                     tracking-tight
+                    text-foreground
 
                     sm:text-xl
                     xl:text-2xl
@@ -700,6 +696,45 @@ export function AppShell({
                   )}
                 </Button>
               </Link>
+
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => setProfileOpen((value) => !value)}
+                  className="flex items-center gap-2 rounded-full border border-border bg-card px-2 py-1.5 text-left shadow-sm"
+                >
+                  <div className="flex size-9 items-center justify-center rounded-full bg-gradient-brand text-xs font-semibold text-white">
+                    {user?.initials ||
+                      user?.name
+                        ?.split(" ")
+                        .map((part) => part[0])
+                        .join("")
+                        .slice(0, 2)
+                        .toUpperCase() ||
+                      "ST"}
+                  </div>
+
+                  <div className="hidden text-sm md:block">
+                    <p className="font-medium text-foreground">{user?.name || "Student"}</p>
+                    <p className="text-xs capitalize text-muted-foreground">{user?.role || "Student"}</p>
+                  </div>
+
+                  <ChevronDown className="size-4 text-slate-400" />
+                </button>
+
+                {profileOpen && (
+                  <div className="absolute right-0 top-12 z-50 w-48 rounded-2xl border border-border bg-card p-2 shadow-xl">
+                    <button
+                      type="button"
+                      onClick={handleSignOut}
+                      className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-sm text-red-600 transition hover:bg-red-50"
+                    >
+                      <LogOut className="size-4" />
+                      Logout
+                    </button>
+                  </div>
+                )}
+              </div>
 
             </div>
 
