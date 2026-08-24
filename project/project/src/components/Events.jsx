@@ -1,4 +1,10 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
+
 import {
   Calendar,
   MapPin,
@@ -13,29 +19,26 @@ import {
   SearchBar,
   Modal,
   Field,
-  Select,
   EmptyState,
   ConfirmDialog,
   PersonListModal,
 } from "./Shared";
 
-import {
-  seedClubs,
-  seedStudents,
-  seedEvents,
-  STATUS_STYLES,
-} from "../data/mockData";
+import { STATUS_STYLES } from "../data/mockData";
 
 import {
   formatDate,
   inputCls,
   textareaCls,
-  rosterFor,
   cardShadowCls,
   secondaryBtnCls,
   primaryBtnCls,
 } from "../utils";
 import { API_BASE_URL } from "../api-config.js";
+import {
+  withDerivedEventStatus,
+  withDerivedEventStatuses,
+} from "../event-status.js";
 
 /* =====================================================
    BACKEND API URL
@@ -49,19 +52,17 @@ const API_URL = `${API_BASE_URL}/api/events`;
 
 function EventForm({
   initial,
-  clubNames,
   onCancel,
   onSubmit,
 }) {
   const [form, setForm] = useState(
     initial || {
       name: "",
-      club: clubNames[0] || "",
+      club: "",
       desc: "",
       date: "",
       venue: "",
       regCap: 100,
-      status: "Upcoming",
     }
   );
 
@@ -94,37 +95,14 @@ function EventForm({
         />
       </Field>
 
-      <div className="grid grid-cols-2 gap-3">
-        <Field label="Hosting club">
-          <Select
-            value={form.club}
-            onChange={set("club")}
-          >
-            {clubNames.map((club) => (
-              <option key={club}>
-                {club}
-              </option>
-            ))}
-          </Select>
-        </Field>
-
-        <Field label="Status">
-          <Select
-            value={form.status}
-            onChange={set("status")}
-          >
-            {[
-              "Upcoming",
-              "Ongoing",
-              "Completed",
-            ].map((status) => (
-              <option key={status}>
-                {status}
-              </option>
-            ))}
-          </Select>
-        </Field>
-      </div>
+      <Field label="Hosting club">
+        <input
+          className={inputCls}
+          value={form.club}
+          onChange={set("club")}
+          placeholder="e.g. Coding Club"
+        />
+      </Field>
 
       <Field label="Description">
         <textarea
@@ -195,13 +173,7 @@ function EventForm({
 ===================================================== */
 
 export default function Events({ notify }) {
-  const clubNames = seedClubs.map(
-    (club) => club.name
-  );
-
-  const [events, setEvents] = useState(
-    seedEvents.map((event) => ({ ...event, id: event.id || event._id }))
-  );
+  const [events, setEvents] = useState([]);
 
   const [query, setQuery] =
     useState("");
@@ -225,60 +197,113 @@ export default function Events({ notify }) {
   const [loading, setLoading] =
     useState(true);
 
+  const [error, setError] =
+    useState("");
+
+  const [rosterPeople, setRosterPeople] =
+    useState([]);
+
+  const [rosterLoading, setRosterLoading] =
+    useState(false);
+
   /* =====================================================
      GET ALL EVENTS
   ===================================================== */
 
-  const fetchEvents = async () => {
+  const fetchEvents = useCallback(async () => {
+    const token = localStorage.getItem("adminToken");
+
+    if (!token) {
+      setError("Please sign in as an administrator to manage events.");
+      setLoading(false);
+      return;
+    }
+
     try {
       setLoading(true);
+      setError("");
 
-      const response = await fetch(
-        API_URL
-      );
+      const response = await fetch(API_URL, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
-      const data =
-        await response.json();
+      const data = await response.json();
 
       if (!response.ok) {
-        console.error(
-          data.message ||
-            "Failed to fetch events"
-        );
-        setEvents(
-          seedEvents.map((event) => ({ ...event, id: event.id || event._id }))
-        );
-        return;
+        throw new Error(data.message || "Failed to fetch events");
       }
 
-      const formattedEvents =
-        (data.events || []).map(
-          (event) => ({
-            ...event,
-            id: event._id || event.id,
-          })
-        );
+      const formattedEvents = withDerivedEventStatuses(
+        Array.isArray(data.events) ? data.events : []
+      ).map((event) => ({
+        ...event,
+        id: event._id || event.id,
+      }));
 
-      setEvents(
-        formattedEvents.length
-          ? formattedEvents
-          : seedEvents.map((event) => ({ ...event, id: event.id || event._id }))
-      );
+      setEvents(formattedEvents);
     } catch (error) {
-      console.error(
-        "Fetch events error:",
-        error
-      );
-      setEvents(
-        seedEvents.map((event) => ({ ...event, id: event.id || event._id }))
-      );
+      console.error("Fetch events error:", error);
+      setEvents([]);
+      setError(error.message || "Cannot connect to the events backend.");
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     fetchEvents();
+
+    const interval = setInterval(() => {
+      setEvents((previous) =>
+        previous.map((event) => ({
+          ...withDerivedEventStatus(event),
+          id: event._id || event.id,
+        }))
+      );
+    }, 60000);
+
+    return () => clearInterval(interval);
+  }, [fetchEvents]);
+
+  const fetchRoster = useCallback(async (event) => {
+    const eventId = event?._id || event?.id;
+    const token = localStorage.getItem("adminToken");
+
+    setRosterEvent(event);
+    setRosterPeople([]);
+
+    if (!eventId || !token) {
+      alert("Please sign in as an administrator to view registrations.");
+      return;
+    }
+
+    try {
+      setRosterLoading(true);
+
+      const response = await fetch(`${API_URL}/${eventId}/registrations`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to fetch registrations");
+      }
+
+      setRosterPeople(
+        Array.isArray(data.students) ? data.students : []
+      );
+    } catch (error) {
+      console.error("Fetch event registrations error:", error);
+      alert(error.message || "Cannot connect to the registrations backend.");
+      setRosterEvent(null);
+    } finally {
+      setRosterLoading(false);
+    }
   }, []);
 
   /* =====================================================
@@ -329,23 +354,7 @@ export default function Events({ notify }) {
         );
 
       if (!token) {
-        const newEvent = {
-          ...form,
-          id: `demo-${Date.now()}`,
-          _id: `demo-${Date.now()}`,
-          name: form.name.trim(),
-          club: form.club,
-          desc: form.desc,
-          date: form.date,
-          venue: form.venue,
-          regCount: Number(form.regCap) || 100,
-          regCap: Number(form.regCap) || 100,
-          status: form.status,
-        };
-
-        setEvents((previous) => [newEvent, ...previous]);
-        setModal(null);
-        notify?.({ title: "Event created", subtitle: form.name });
+        alert("Please sign in as an administrator to create events.");
         return;
       }
 
@@ -383,8 +392,6 @@ export default function Events({ notify }) {
                 form.regCap
               ) || 100,
 
-            status:
-              form.status,
           }),
         }
       );
@@ -401,7 +408,7 @@ export default function Events({ notify }) {
       }
 
       const newEvent = {
-        ...data.event,
+        ...withDerivedEventStatus(data.event),
         id: data.event._id,
       };
 
@@ -449,15 +456,7 @@ export default function Events({ notify }) {
         );
 
       if (!token) {
-        setEvents((previous) =>
-          previous.map((event) =>
-            event._id === (modal.event._id || modal.event.id) || event.id === (modal.event._id || modal.event.id)
-              ? { ...event, ...form, id: event.id || event._id, _id: event._id || event.id, name: form.name.trim(), club: form.club, desc: form.desc, date: form.date, venue: form.venue, regCap: Number(form.regCap) || 100, status: form.status }
-              : event
-          )
-        );
-        setModal(null);
-        notify?.({ title: "Event updated", subtitle: form.name });
+        alert("Please sign in as an administrator to update events.");
         return;
       }
 
@@ -499,8 +498,6 @@ export default function Events({ notify }) {
                 form.regCap
               ) || 100,
 
-            status:
-              form.status,
           }),
         }
       );
@@ -517,7 +514,7 @@ export default function Events({ notify }) {
       }
 
       const updatedEvent = {
-        ...data.event,
+        ...withDerivedEventStatus(data.event),
         id: data.event._id,
       };
 
@@ -569,9 +566,7 @@ export default function Events({ notify }) {
         );
 
       if (!token) {
-        setEvents((previous) => previous.filter((item) => (item._id || item.id) !== (event._id || event.id)));
-        setDeleteTarget(null);
-        notify?.({ title: "Event deleted", subtitle: event.name });
+        alert("Please sign in as an administrator to delete events.");
         return;
       }
 
@@ -606,7 +601,7 @@ export default function Events({ notify }) {
         (previous) =>
           previous.filter(
             (item) =>
-              item._id !==
+              (item._id || item.id) !==
               eventId
           )
       );
@@ -709,7 +704,20 @@ export default function Events({ notify }) {
         </div>
       )}
 
-      {!loading && (
+      {!loading && error && (
+        <div className="mt-8 rounded-2xl border border-red-100 bg-red-50 px-5 py-4 text-sm text-red-700">
+          <p>{error}</p>
+          <button
+            type="button"
+            onClick={fetchEvents}
+            className="mt-3 rounded-full bg-white px-3 py-1.5 font-medium text-red-700 shadow-sm hover:bg-red-100"
+          >
+            Retry
+          </button>
+        </div>
+      )}
+
+      {!loading && !error && (
         <>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 mt-5">
             {filtered.map(
@@ -826,9 +834,7 @@ export default function Events({ notify }) {
                     <div className="flex items-center gap-2 mt-4 pt-4 border-t border-slate-200">
                       <button
                         onClick={() =>
-                          setRosterEvent(
-                            event
-                          )
+                          fetchRoster(event)
                         }
                         className="flex items-center gap-1.5 text-sm font-medium text-slate-900 hover:text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-full px-3 py-1.5"
                       >
@@ -1020,13 +1026,11 @@ export default function Events({ notify }) {
                 ? modal.event
                 : null
             }
-            clubNames={
-              clubNames
-            }
             onCancel={() =>
               setModal(null)
             }
             onSubmit={
+
               modal.mode ===
               "create"
                 ? handleCreate
@@ -1041,26 +1045,25 @@ export default function Events({ notify }) {
       {rosterEvent && (
         <PersonListModal
           title="Registered students"
-          subtitle={`${
-            rosterEvent.regCount ||
-            0
-          } students registered for ${
-            rosterEvent.name
-          }.`}
-          people={rosterFor(
-            seedStudents,
-            rosterEvent.id,
-            rosterEvent.regCount ||
-              0
-          )}
+          subtitle={
+            rosterLoading
+              ? "Loading registered students..."
+              : `${rosterPeople.length} students registered for ${rosterEvent.name}.`
+          }
+          people={rosterPeople}
           meta={(person) =>
-            `${person.rollNo} · ${person.department}`
+            [
+              person.studentId,
+              person.department,
+              person.email,
+            ]
+              .filter(Boolean)
+              .join(" · ") || "Registered student"
           }
-          onClose={() =>
-            setRosterEvent(
-              null
-            )
-          }
+          onClose={() => {
+            setRosterEvent(null);
+            setRosterPeople([]);
+          }}
         />
       )}
 

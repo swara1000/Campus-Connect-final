@@ -3,6 +3,7 @@ import express from "express";
 import {
   getEvents,
   getEventById,
+  getEventRegistrations,
   createEvent,
   updateEvent,
   deleteEvent,
@@ -35,6 +36,14 @@ router.get(
 
 // Student + Admin can see a single event
 router.get("/:id", getEventById);
+
+// ADMIN - registered students for an event
+router.get(
+  "/:id/registrations",
+  protect,
+  adminOnly,
+  getEventRegistrations
+);
 
 // CHECK REGISTRATION STATUS
 router.get(

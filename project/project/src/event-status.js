@@ -1,5 +1,3 @@
-const EVENT_STATUSES = ["Upcoming", "Ongoing", "Completed"];
-
 function parseCalendarDate(value) {
   if (!value) {
     return null;
@@ -57,18 +55,12 @@ export function getEventStatus(date, referenceDate = new Date()) {
 }
 
 export function withDerivedEventStatus(event) {
-  const serialized =
-    event && typeof event.toObject === "function"
-      ? event.toObject()
-      : { ...event };
-
   return {
-    ...serialized,
-    status: getEventStatus(serialized.date),
+    ...event,
+    status: getEventStatus(event?.date),
   };
 }
 
 export function withDerivedEventStatuses(events) {
   return events.map(withDerivedEventStatus);
 }
-

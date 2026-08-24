@@ -341,6 +341,59 @@ export const deleteEvent = async (req, res) => {
 };
 
 // =====================================================
+// GET EVENT REGISTRATIONS - ADMIN
+// =====================================================
+
+export const getEventRegistrations = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid event ID",
+      });
+    }
+
+    const event = await Event.findById(id).select("_id");
+
+    if (!event) {
+      return res.status(404).json({
+        success: false,
+        message: "Event not found",
+      });
+    }
+
+    const registrations = await EventRegistration.find({
+      event: id,
+      status: "registered",
+    })
+      .populate("student", "name email studentId department year")
+      .sort({ createdAt: -1 });
+
+    const students = registrations
+      .filter((registration) => registration.student)
+      .map((registration) => ({
+        ...registration.student.toObject(),
+        registeredAt: registration.createdAt,
+      }));
+
+    return res.status(200).json({
+      success: true,
+      count: students.length,
+      students,
+    });
+  } catch (error) {
+    console.error("Get event registrations error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch event registrations",
+    });
+  }
+};
+
+// =====================================================
 // REGISTER FOR EVENT - STUDENT
 // =====================================================
 
